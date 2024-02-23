@@ -1,0 +1,12 @@
+devid= ninus-hideon
+devtitle= Ninus Hideon
+gameid= filling-rush
+gametitle= Filling Rush
+version= 0.1
+icon = metadata/icon.png
+
+# Uncomment the entry below to bytecode compile your Ruby code (Pro License Only)
+#compile_ruby=false
+
+# Uncomment the entry below to specify the package name for your APK (Pro License Only)
+#packageid=org.dev.gamename

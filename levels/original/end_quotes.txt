@@ -1,0 +1,36 @@
+{ :deaths => {
+    0 => "GOD!",
+    1 => "DEMIGOD!",
+    2 => "DIVINE!",
+    5 => "HARD TO KILL",
+    9 => "A CAT!",
+    10 => "HARD TO KILL",
+    15 => "A MERE MORTAL",
+    40 => "EASY TO KILL",
+    42 => "THE ANSWER!",
+    43 => "EASY TO KILL",
+    100 => "TOO MANY DEATHS...",
+    182 => "SISTER? IT'S YOU?",
+    200 => "ARE YOU OK?"
+  },
+  :time => {
+  0 => "HOW?!",
+  3600 => "GODSPEED!", #1:00
+  4500 => "DEMIGODSPEED!", #1:15
+  5400 => "LIGHTNING FAST!", #1:30
+  6300 => "FLASH!", #1:45
+  7200 => "YOU'RE THE WIND!", #2:00
+  7800 => "GOD, YOU'RE FAST!", # 2:10
+  8400 => "WAIT FOR ME!", # 2:20
+  9000 => "ATTA BOY!", #2:30
+  9600 =>  "RUNNER", #2:40
+  10800 => "GOOD TIMING", #3:00
+  12600 => "GETTING GOOD", #3:30
+  14400 => "GIT GOOD!", #4:00
+  16200 => "COULD BE FASTER", #4:30
+  18000 => "SO SLOW...", #5:00
+  21600 => "HAD A NICE WALK?", #6:00
+  28800 => "TOOK YOUR TIME...", # 8:00
+  36000 => "10 YEARS LATER...", #10:00
+  }
+}

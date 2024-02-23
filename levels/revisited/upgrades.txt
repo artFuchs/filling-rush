@@ -1,0 +1,3 @@
+{ :player => { 6 => :jump, 11 => :double_jump },
+  :filler => { }
+}

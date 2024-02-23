@@ -1,0 +1,3 @@
+{ :player => { 4 => :jump, 6 => :double_jump },
+  :filler => { 6 => :skip_own_blocks, 10 => :skip_blocks }
+}
