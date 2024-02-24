@@ -36,13 +36,8 @@ class Game < Scene
 
     reset_level if args.nokia.keyboard.key_down.r or args.nokia.keyboard.key_down.backspace
 
-
     if !@pause
       player_inputs args, @level.player
-    else
-      if args.nokia.keyboard.key_down.right
-        update_characters
-      end
     end
   end
 
