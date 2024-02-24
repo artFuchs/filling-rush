@@ -87,6 +87,8 @@ class Game < Scene
     set_player_sprite
     args.nokia.sprites << @level.player
 
+    args.nokia.sprites << @level.fire
+
     if @level.particles
       args.nokia.solids << @level.particles
     end
@@ -101,11 +103,23 @@ class Game < Scene
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.blocks
     
+    if @level.player.state == :frozen
+      unfreeze if (collide? @level.player, [@level.fire]).size > 0
+    else
+      reset_level if (collide? @level.player, [@level.fire]).size > 0
+    end
+    
     next_level if (collide? @level.player, [@level.goal]).size > 0
 
     if @level.particles
       @level.particles = move_particles @level.particles
     end
+  end
+
+  def unfreeze
+    @level.player.state = :ground
+    # remove fire from level without setting it to nil
+    @level.fire = { x: 0, y: 0, w: 0, h: 0 }
   end
   
   def next_level
