@@ -156,6 +156,7 @@ class Game < Scene
       else
         @level.blocks = parsed_level.blocks
         @level.goal = parsed_level.goal
+        @level.fire = parsed_level.fire
       end
     else
       end_game
