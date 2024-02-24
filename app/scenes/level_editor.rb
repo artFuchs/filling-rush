@@ -1,8 +1,7 @@
 class LevelEditor < Scene
   attr_gtk
 
-  def initialize(pack_path = "/levels/original/", level_num=1)
-    @pack_path = pack_path
+  def initialize(level_num=1) 
     @level_num = level_num
     @selected_blocks = []
     @level = default_level
@@ -11,7 +10,7 @@ class LevelEditor < Scene
   end
 
   def next_scene
-    Game.new(@pack_path, @level_num)
+    Game.new(@level_num)
   end
 
   def default_level
@@ -23,12 +22,12 @@ class LevelEditor < Scene
   end
 
   def load_level
-    parsed_level = $gtk.deserialize_state(@pack_path + "level#{@level_num}.txt")
+    parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
     @level = parsed_level if parsed_level
   end
 
   def save_level
-    $gtk.serialize_state(@pack_path + "level#{@level_num}.txt", @level)
+    $gtk.serialize_state("levels/level#{@level_num}.txt", @level)
   end
 
   def tick
