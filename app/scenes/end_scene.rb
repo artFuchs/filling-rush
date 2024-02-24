@@ -1,11 +1,11 @@
 class EndScene < Scene
 
-  def initialize(pack_path,deaths,time)
+  def initialize(deaths,time)
     @deaths = deaths
     @time = time
     @borders = {x: 2, y: 2, w: 80, h: 44}
     @tick_count = 0
-    @phrases = $gtk.deserialize_state(pack_path+"end_quotes.txt")
+    @phrases = $gtk.deserialize_state("levels/end_quotes.txt")
   end
 
   def next_scene

@@ -32,8 +32,7 @@ def player_inputs args, player
   player.walking = (player.vel_h != 0)
   player.flip_horizontally = false if player.vel_h > 0
   player.flip_horizontally = true if player.vel_h < 0
-  up = args.nokia.keyboard.key_down.up or args.nokia.keyboard.key_down.w
-  if up and player.powers.jump
+  if (args.nokia.keyboard.key_down.up || args.nokia.keyboard.key_down.w)
     apply_jump args, player
   end
 end
@@ -45,7 +44,7 @@ def apply_jump args, player
     player.vel_v = 1.5
     play_sound args, :jump
   when :air
-    if player.can_double_jump and player.powers.double_jump
+    if player.can_double_jump
       player.vel_v = 1.5
       player.can_double_jump = false
       play_sound args, :jump

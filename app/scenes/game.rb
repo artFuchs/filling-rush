@@ -1,29 +1,25 @@
 require 'app/game/physics.rb'
 require 'app/game/particles.rb'
-require 'app/game/filler.rb'
 require 'app/game/sound.rb'
 require 'app/game/player.rb'
 
 class Game < Scene
   attr_gtk
 
-  def initialize(pack_path = "levels/original/", level_num = 1)
-    @filler = default_filler $level_box
+  def initialize(level_num = 1)
     @level_num = level_num
-    @pack_path = pack_path
-    @upgrades = $gtk.deserialize_state(@pack_path + "upgrades.txt")
     @pause = false
-    @deaths = 0
-    @time = 0
     @next_scene = nil
+    @time = 0
+    @deaths = 0
     load_level
   end
 
   def tick
     return if @over
     input
-    render
     update if !@pause
+    render
     @time += 1 if !@pause
   end
 
@@ -33,10 +29,10 @@ class Game < Scene
 
     return_tittle if args.nokia.keyboard.key_down.escape
 
-    # if args.nokia.keyboard.key_down.e
-    #   @next_scene = LevelEditor.new(@pack_path,@level_num)
-    #   @over = true
-    # end
+    if !gtk.production && args.nokia.keyboard.key_down.e
+      @next_scene = LevelEditor.new(@level_num)
+      @over = true
+    end
 
     reset_level if args.nokia.keyboard.key_down.r or args.nokia.keyboard.key_down.backspace
 
@@ -91,8 +87,6 @@ class Game < Scene
     set_player_sprite
     args.nokia.sprites << @level.player
 
-    render_filler args, @filler
-
     if @level.particles
       args.nokia.solids << @level.particles
     end
@@ -107,11 +101,7 @@ class Game < Scene
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.blocks
 
-    update_filler @filler, @level.blocks
-
     next_level if (collide? @level.player, [@level.goal]).size > 0
-
-    reset_level if (collide? @level.player, [@filler.current_region,@filler]).size>0
 
     if @level.particles
       @level.particles = move_particles @level.particles
@@ -128,9 +118,6 @@ class Game < Scene
     # change level
     @level_num += 1
     load_level
-    if @upgrades.player.has_key? (@level_num)
-      play_sound(args, :evolve)
-    end
   end
 
   def reset_level
@@ -144,7 +131,7 @@ class Game < Scene
   end
 
   def load_level reset=false
-    parsed_level = $gtk.deserialize_state(@pack_path + "level#{@level_num}.txt")
+    parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
     if parsed_level
       if !@level
         @level = parsed_level
@@ -160,27 +147,10 @@ class Game < Scene
     if reset
       @level.player = parsed_level.player
     end
-
-    # set filler state
-    @filler.x = @filler.min_x
-    @filler.y = @filler.min_y
-    @filler.state = :inside_wall
-    @filler.blocks = []
-    @filler.current_region = {}
-    @level_num.times do |i|
-      if @upgrades.filler.has_key? (i+1)
-        @filler.powers[@upgrades.filler[i+1]] = true
-      end
-
-      @level.player.powers = {} if not @level.player.powers
-      if @upgrades.player.has_key? (i+1)
-        @level.player.powers[@upgrades.player[i+1]] = true
-      end
-    end
   end
 
   def end_game
-    @next_scene = EndScene.new(@pack_path,@deaths,@time)
+    @next_scene = EndScene.new(@deaths,@time)
     @over = true
   end
 

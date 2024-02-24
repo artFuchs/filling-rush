@@ -1,3 +1,0 @@
-{ 0 => {name: "jam original", path: "levels/original/"},
-  1 => {name: "jam revisited", path: "levels/revisited/"}
-}
