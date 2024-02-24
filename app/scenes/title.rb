@@ -1,4 +1,4 @@
-class Tittle < Scene
+class Title < Scene
   attr_gtk
   @@borders = {x: 2, y: 2, w: 80, h: 44}
 

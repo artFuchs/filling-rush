@@ -9,7 +9,7 @@ class EndScene < Scene
   end
 
   def next_scene
-    Tittle.new
+    Title.new
   end
 
   def tick

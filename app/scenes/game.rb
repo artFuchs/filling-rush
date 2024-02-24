@@ -27,7 +27,7 @@ class Game < Scene
 
     @pause = !@pause if args.nokia.keyboard.key_down.enter
 
-    return_tittle if args.nokia.keyboard.key_down.escape
+    return_title if args.nokia.keyboard.key_down.escape
 
     if !gtk.production && args.nokia.keyboard.key_down.e
       @next_scene = LevelEditor.new(@level_num)
@@ -154,8 +154,8 @@ class Game < Scene
     @over = true
   end
 
-  def return_tittle
-    @next_scene = Tittle.new
+  def return_title
+    @next_scene = Title.new
     @over = true
   end
 
