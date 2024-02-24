@@ -10,7 +10,7 @@ def apply_gravity obj
 end
 
 def move_object obj, borders, colliders
-  if obj.state == :air || obj.state == :frozen
+  if obj.state == :frozen
     apply_inertia obj
   end
   future = move_restricting_to_borders obj, borders
@@ -19,12 +19,7 @@ def move_object obj, borders, colliders
 end
 
 def apply_inertia obj
-  vel_h = 0
-  vel_h = obj.vel_h if obj.vel_h
-  if obj.last_vel_h != 0 && obj.vel_h == 0
-    vel_h = obj.last_vel_h * 0.97
-  end
-  obj.vel_h = vel_h
+  obj.vel_h =  obj.vel_h * 0.97
 end
 
 def move_restricting_to_borders obj, borders

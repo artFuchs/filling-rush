@@ -40,8 +40,6 @@ def player_inputs args, player
   if player.state == :frozen
     return
   end
-  player.last_vel_h = 0
-  player.last_vel_h = player.vel_h if player.vel_h
   player.vel_h = args.nokia.keyboard.left_right*0.5
   player.walking = (player.vel_h != 0)
   player.flip_horizontally = false if player.vel_h > 0
