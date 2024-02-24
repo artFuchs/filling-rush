@@ -18,6 +18,7 @@ class LevelEditor < Scene
       blocks: [],
       player: {},
       goal: {},
+      fire: {},
     }
   end
 
@@ -87,13 +88,15 @@ class LevelEditor < Scene
       obj = nil
       obj = :player if args.inputs.keyboard.p
       obj = :goal if args.inputs.keyboard.g
+      obj = :fire if args.inputs.keyboard.f
       if obj
         if shift
           @level[obj] = {}
         else
           sprites = {
                       player: { w: 8, h: 8, path: 'sprites/player0.png' },
-                      goal: { w: 8, h: 8, path: 'sprites/exit0.png' }
+                      goal: { w: 8, h: 8, path: 'sprites/exit0.png' },
+                      fire: { w: 4, h: 4, path: 'sprites/filler.png' }
                     }
           @level[obj] = sprites[obj].merge(x: mouse_pos.x, y: mouse_pos.y)
         end
@@ -211,6 +214,10 @@ class LevelEditor < Scene
 
     if @level.goal
       args.nokia.sprites << @level.goal
+    end
+
+    if @level.fire
+      args.nokia.sprites << @level.fire
     end
 
     args.labels << {x: 10, y: 20,

@@ -86,6 +86,8 @@ class Game < Scene
     set_player_sprite
     args.nokia.sprites << @level.player
 
+    args.nokia.sprites << @level.fire
+
     if @level.particles
       args.nokia.solids << @level.particles
     end
@@ -94,17 +96,32 @@ class Game < Scene
 
 
   def update
-
     set_player_state @level
 
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.blocks
+    
+    if @level.player.state == :frozen
+      unfreeze if (collide? @level.player, [@level.fire]).size > 0
+    else
+      reset_level if (collide? @level.player, [@level.fire]).size > 0
+    end
     
     next_level if (collide? @level.player, [@level.goal]).size > 0
 
     if @level.particles
       @level.particles = move_particles @level.particles
     end
+  end
+
+  def unfreeze
+    bellow = @level.player.merge(y: @level.player.y-1)
+    if (collide? bellow, @level.blocks).size > 0 || bellow.y <= $level_box.y
+      @level.player.state = :ground
+    else
+      @level.player.state = :air
+    end
+    @level.fire = { x: 0, y: 0, w: 0, h: 0 }
   end
   
   def next_level
@@ -138,6 +155,7 @@ class Game < Scene
       else
         @level.blocks = parsed_level.blocks
         @level.goal = parsed_level.goal
+        @level.fire = parsed_level.fire
       end
     else
       end_game
