@@ -15,6 +15,15 @@ end
 def set_player_state level
   blocks = level.blocks
   bellow = level.player.merge(y: level.player.y-1)
+
+  if args.nokia.keyboard.key_down.space
+    level.player.state = :frozen
+  end
+
+  if level.player.state == :frozen
+    return
+  end
+
   if (collide? bellow, blocks).size > 0 || bellow.y <= $level_box.y
     level.player.state = :ground
     level.player.can_double_jump = true
@@ -28,6 +37,11 @@ end
 
 
 def player_inputs args, player
+  if player.state == :frozen
+    return
+  end
+  player.last_vel_h = 0
+  player.last_vel_h = player.vel_h if player.vel_h
   player.vel_h = args.nokia.keyboard.left_right*0.5
   player.walking = (player.vel_h != 0)
   player.flip_horizontally = false if player.vel_h > 0
@@ -50,7 +64,6 @@ def apply_jump args, player
       play_sound args, :jump
     end
   end
-
 end
 
 

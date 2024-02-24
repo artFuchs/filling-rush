@@ -100,14 +100,14 @@ class Game < Scene
 
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.blocks
-
+    
     next_level if (collide? @level.player, [@level.goal]).size > 0
 
     if @level.particles
       @level.particles = move_particles @level.particles
     end
   end
-
+  
   def next_level
     # create explosion effect
     g = @level.goal
