@@ -10,6 +10,7 @@ def apply_gravity obj
 end
 
 def move_object obj, borders, colliders
+  return obj if obj.state == :using_power
   if obj.state == :frozen
     apply_inertia obj
   end

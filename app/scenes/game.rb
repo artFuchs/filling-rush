@@ -15,6 +15,10 @@ class Game < Scene
     load_level
   end
 
+  def level
+    return @level
+  end
+
   def tick
     return if @over
     input
