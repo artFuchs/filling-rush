@@ -86,7 +86,8 @@ class Game < Scene
     set_player_sprite
     args.nokia.sprites << @level.player
 
-    args.nokia.sprites << @level.fire
+    fire_frame = args.state.tick_count.idiv(15)%5
+    args.nokia.sprites << @level.fire.merge(path: "sprites/small_fire#{fire_frame}.png")
 
     if @level.particles
       args.nokia.solids << @level.particles

@@ -96,7 +96,7 @@ class LevelEditor < Scene
           sprites = {
                       player: { w: 8, h: 8, path: 'sprites/player0.png' },
                       goal: { w: 8, h: 8, path: 'sprites/exit0.png' },
-                      fire: { w: 4, h: 4, path: 'sprites/filler.png' }
+                      fire: { w: 4, h: 4, path: 'sprites/small_fire0.png' }
                     }
           @level[obj] = sprites[obj].merge(x: mouse_pos.x, y: mouse_pos.y)
         end
