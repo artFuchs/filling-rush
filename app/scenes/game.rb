@@ -97,7 +97,6 @@ class Game < Scene
 
 
   def update
-
     set_player_state @level
 
     @level.player = apply_gravity @level.player
@@ -117,8 +116,12 @@ class Game < Scene
   end
 
   def unfreeze
-    @level.player.state = :ground
-    # remove fire from level without setting it to nil
+    bellow = @level.player.merge(y: @level.player.y-1)
+    if (collide? bellow, @level.blocks).size > 0 || bellow.y <= $level_box.y
+      @level.player.state = :ground
+    else
+      @level.player.state = :air
+    end
     @level.fire = { x: 0, y: 0, w: 0, h: 0 }
   end
   
