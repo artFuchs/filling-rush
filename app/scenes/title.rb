@@ -14,26 +14,15 @@ class Title < Scene
 
   def render
 
-    title = ["Filling", "Rush", "3310"]
-
-    args.nokia.borders << @@borders
-
-    (title.size).times do |i|
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: @@borders.x + @@borders.w - 2,
-                                       y: @@borders.y + @@borders.h - 4 -(i*9),
-                                       text: title[i],
-                                       alignment_enum: 2, size_enum: NOKIA_FONT_MD)
-    end
+    args.nokia.sprites << {
+      x:0, y: 0, w:84, h: 48, path: "sprites/title.png"
+    }
 
 
     if ((args.state.tick_count/30)%3) > 1
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: 43,
-                                       y: 8, text: "Press Enter",
-                                       alignment_enum: 1, size_enum: NOKIA_FONT_SM)
+      args.nokia.sprites << {
+        x: 1, y: 1, w: 48, h: 8, path: "sprites/press_enter.png"
+      }
     end
 
     args.nokia.solids << @blocks
