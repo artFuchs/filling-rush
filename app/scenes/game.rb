@@ -6,6 +6,8 @@ require 'app/game/player.rb'
 class Game < Scene
   attr_gtk
 
+  PORTAL_TIME = 30
+
   def initialize(level_num = 1)
     @level_num = level_num
     @pause = false
@@ -40,10 +42,9 @@ class Game < Scene
 
     reset_level if args.nokia.keyboard.key_down.r or args.nokia.keyboard.key_down.backspace
 
-
-    if !@pause
-      player_inputs args, @level.player
-    end
+    return if @pause
+    return if (@time - @level.portal.time) < PORTAL_TIME
+    player_inputs args, @level.player
   end
 
   def render
@@ -59,24 +60,13 @@ class Game < Scene
                                 .merge(x: 42,
                                        y: 24, text: "PAUSED",
                                        alignment_enum: 1)
-
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: 3,
-                                      y: 40, text: "D: #{@deaths}",
-                                      alignment_enum: 0)
   
       args.nokia.labels << args.nokia
                                 .default_label
-                                .merge(x: 43,
-                                        y: 40 , text: "LEVEL #{@level_num}",
+                                .merge(x: 42,
+                                        y: 30, text: "LEVEL #{@level_num}",
                                         alignment_enum: 1)
 
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: 82,
-                                       y: 40, text: time_str,
-                                       alignment_enum: 2)
     end
 
     args.nokia.primitives << $level_box.border!
@@ -84,6 +74,13 @@ class Game < Scene
     args.nokia.sprites << @level.backgrounds if @level.backgrounds
     args.nokia.solids << @level.blocks
     args.nokia.sprites << @level.spikes
+
+
+    if @time - @level.portal.time < PORTAL_TIME
+      frame = (PORTAL_TIME - (@time - @level.portal.time)).idiv(10) 
+      args.nokia.sprites << @level.portal.merge(path: "sprites/portal#{frame}.png")
+    end
+
 
     goal_frame = (args.state.tick_count/30).floor%2
     if @level.goal
@@ -176,7 +173,7 @@ class Game < Scene
     point = { x: g.x + g.w/2,
               y: g.y + g.h/2 }
     @level.particles = create_explosion point
-    play_sound args, :goal
+    play_sound args, :portal
     # change level
     @level_num += 1
     load_level
@@ -188,7 +185,6 @@ class Game < Scene
               y: p.y + p.h/2 }
     @level.particles = create_explosion point
     @deaths += 1
-    play_sound args, :die
     load_level true
     @pause = false
   end
@@ -204,6 +200,8 @@ class Game < Scene
       @level.spikes ||= []
       @level.holes ||= []
       @level.particles = particles
+      player = @level.player
+      @level.portal = {x: player.x - 2, y: player.y - 2, w: 12, h: 12, time: @time}
       if @level.goal
         @level.goal = nil
       end
