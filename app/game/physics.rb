@@ -9,21 +9,25 @@ def apply_gravity obj
   obj.merge(vel_v: v)
 end
 
-def move_object obj, borders, colliders
+def move_object obj, borders, holes, colliders
   return obj if obj.state == :using_power
   if obj.state == :frozen || obj.state == :melting
     apply_inertia obj
   end
-  future = move_restricting_to_borders obj, borders
+  future = move_restricting_to_borders obj, borders, holes
   obj2 = move_checking_collisions obj, future, colliders
   return obj2
 end
 
 def apply_inertia obj
-  obj.vel_h =  obj.vel_h * 0.97
+  if obj.vel_h.abs < 0.05
+    obj.vel_h = 0
+  else  
+    obj.vel_h =  obj.vel_h * 0.97
+  end
 end
 
-def move_restricting_to_borders obj, borders
+def move_restricting_to_borders obj, borders, holes
   vel_h = 0
   vel_h = obj.vel_h if obj.vel_h
   vel_v = 0
@@ -31,7 +35,11 @@ def move_restricting_to_borders obj, borders
   dx = obj.x + vel_h
   dy = obj.y + vel_v
 
-  if obj.falling
+
+  bellow = obj.merge(y: obj.y-1)
+  feet = bellow.merge(x: bellow.x+bellow.w/2, w: 0)
+  is_falling = (collide? feet, holes).size > 0 || bellow.y < $level_box.y
+  if is_falling
     return obj.merge(x: dx, y: dy, vel_h: vel_h, vel_v: vel_v)
   end
 

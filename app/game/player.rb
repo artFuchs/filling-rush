@@ -25,15 +25,6 @@ def player_has_fallen? player
   return level.player.y+level.player.h+1 < 0
 end
 
-
-def make_player_fall player
-  holes = level.holes
-  bellow = level.player.merge(y: level.player.y-1)
-  feet = bellow.merge(x: bellow.x+bellow.w/2, w: 0)
-  is_falling = (collide? feet, holes).size > 0 || bellow.y < $level_box.y
-  return level.player.merge(falling: is_falling)
-end
-
 def set_player_state level
 
   args.labels << {x: 10, y: 20,

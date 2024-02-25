@@ -108,8 +108,7 @@ class Game < Scene
     set_player_state @level
 
     @level.player = apply_gravity @level.player
-    @level.player = move_object @level.player, $level_box, @level.blocks
-    @level.player = make_player_fall @level.player
+    @level.player = move_object @level.player, $level_box, @level.holes, @level.blocks
     
     cols = collide? @level.player, @level.fires
     if cols.size > 0

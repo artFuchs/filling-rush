@@ -1,1 +1,1 @@
-{:blocks=>[], :player=>{:w=>8, :h=>8, :path=>"sprites/player0.png", :x=>9, :y=>3, :a=>255}, :goal=>{:w=>8, :h=>8, :path=>"sprites/exit0.png", :x=>36, :y=>5, :a=>255}, :fires=>[], :spikes=>[], :fire=>{:a=>255}}
+{:blocks=>[], :player=>{:w=>8, :h=>8, :path=>"sprites/player0.png", :x=>8, :y=>1, :a=>255}, :goal=>{:w=>8, :h=>8, :path=>"sprites/exit0.png", :x=>39, :y=>3, :a=>255}, :fires=>[], :spikes=>[], :fire=>{:a=>255}, :holes=>[]}
