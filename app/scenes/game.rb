@@ -14,6 +14,7 @@ class Game < Scene
     @next_scene = nil
     @time = 0
     @deaths = 0
+    @in_transition = false
     load_level
   end
 
@@ -23,10 +24,30 @@ class Game < Scene
 
   def tick
     return if @over
-    input
-    update if !@pause
+    defaults
+    if !@in_transition
+      input
+      update if !@pause
+    else 
+      update_transition
+    end
+    if @level.particles
+      @level.particles = move_particles @level.particles
+    end
+
     render
     @time += 1 if !@pause
+  end
+
+  def defaults
+    return if @time > 0
+
+    args.outputs[:block].w = 84
+    args.outputs[:block].h = 48 
+    args.outputs[:block] << {
+      x: 0, y: 0, w: 84, h: 48, r: 64, g: 82, b: 61
+    }.solid!
+
   end
 
   def input
@@ -77,7 +98,7 @@ class Game < Scene
 
 
     if @time - @level.portal.time < PORTAL_TIME
-      frame = (PORTAL_TIME - (@time - @level.portal.time)).idiv(10) 
+      frame = (@time - @level.portal.time).idiv(5)
       args.nokia.sprites << @level.portal.merge(path: "sprites/portal#{frame}.png")
     end
 
@@ -99,6 +120,14 @@ class Game < Scene
 
     if @level.particles
       args.nokia.solids << @level.particles
+    end
+
+    if @in_transition
+      args.nokia.sprites << {
+        x: 168*(TRANSITION_TIME-@transition_time)/TRANSITION_TIME*2 - 84,
+        y: 0, h: 48, w: 84,
+        path: :block
+        }
     end
   end
 
@@ -133,10 +162,6 @@ class Game < Scene
     reset_level if (collide? @level.player, @level.spikes).size > 0
 
     next_level if (collide? @level.player, [@level.goal]).size > 0
-
-    if @level.particles
-      @level.particles = move_particles @level.particles
-    end
   end
 
   def unfreeze fires
@@ -174,9 +199,26 @@ class Game < Scene
               y: g.y + g.h/2 }
     @level.particles = create_explosion point
     play_sound args, :portal
-    # change level
-    @level_num += 1
-    load_level
+
+    @in_transition = true
+    @transition_time = TRANSITION_TIME
+  end
+
+
+  TRANSITION_TIME = 60
+  def update_transition
+    return if !@in_transition
+
+    @transition_time -= 1
+
+    @in_transition = false if @transition_time <= 0
+
+    if @transition_time == (TRANSITION_TIME/2)
+      # change level
+      @level_num += 1
+      load_level
+    end
+
   end
 
   def reset_level
@@ -185,6 +227,7 @@ class Game < Scene
               y: p.y + p.h/2 }
     @level.particles = create_explosion point
     @deaths += 1
+    play_sound args, :portal
     load_level true
     @pause = false
   end
