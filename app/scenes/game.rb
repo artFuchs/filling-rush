@@ -10,7 +10,6 @@ class Game < Scene
     @level_num = level_num
     @pause = false
     @next_scene = nil
-    @time = 0
     @deaths = 0
     load_level
   end
@@ -24,7 +23,6 @@ class Game < Scene
     input
     update if !@pause
     render
-    @time += 1 if !@pause
   end
 
   def input
@@ -47,12 +45,6 @@ class Game < Scene
   end
 
   def render
-    minutes = (@time/(3600)).floor
-    seconds = (@time/(60)).floor % 60
-    minutes = 99 if minutes > 99
-    time_str = "%02d:%02d"%[minutes,seconds]
-
-
     if @pause      
       args.nokia.labels << args.nokia
                                 .default_label
@@ -71,12 +63,6 @@ class Game < Scene
                                 .merge(x: 43,
                                         y: 40 , text: "LEVEL #{@level_num}",
                                         alignment_enum: 1)
-
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: 82,
-                                       y: 40, text: time_str,
-                                       alignment_enum: 2)
     end
 
     args.nokia.primitives << $level_box.border!
@@ -213,7 +199,7 @@ class Game < Scene
   end
 
   def end_game
-    @next_scene = EndScene.new(@deaths,@time)
+    @next_scene = EndScene.new(@deaths)
     @over = true
   end
 
