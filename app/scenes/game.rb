@@ -6,11 +6,15 @@ require 'app/game/player.rb'
 class Game < Scene
   attr_gtk
 
+  PORTAL_TIME = 30
+
   def initialize(level_num = 1)
     @level_num = level_num
     @pause = false
     @next_scene = nil
+    @time = 0
     @deaths = 0
+    @in_transition = false
     load_level
   end
 
@@ -20,9 +24,30 @@ class Game < Scene
 
   def tick
     return if @over
-    input
-    update if !@pause
+    defaults
+    if !@in_transition
+      input
+      update if !@pause
+    else 
+      update_transition
+    end
+    if @level.particles
+      @level.particles = move_particles @level.particles
+    end
+
     render
+    @time += 1 if !@pause
+  end
+
+  def defaults
+    return if @time > 0
+
+    args.outputs[:block].w = 84
+    args.outputs[:block].h = 48 
+    args.outputs[:block] << {
+      x: 0, y: 0, w: 84, h: 48, r: 64, g: 82, b: 61
+    }.solid!
+
   end
 
   def input
@@ -38,31 +63,31 @@ class Game < Scene
 
     reset_level if args.nokia.keyboard.key_down.r or args.nokia.keyboard.key_down.backspace
 
-
-    if !@pause
-      player_inputs args, @level.player
-    end
+    return if @pause
+    return if (@time - @level.portal.time) < PORTAL_TIME
+    player_inputs args, @level.player
   end
 
   def render
+    minutes = (@time/(3600)).floor
+    seconds = (@time/(60)).floor % 60
+    minutes = 99 if minutes > 99
+    time_str = "%02d:%02d"%[minutes,seconds]
+
+
     if @pause      
       args.nokia.labels << args.nokia
                                 .default_label
                                 .merge(x: 42,
                                        y: 24, text: "PAUSED",
                                        alignment_enum: 1)
-
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: 3,
-                                      y: 40, text: "D: #{@deaths}",
-                                      alignment_enum: 0)
   
       args.nokia.labels << args.nokia
                                 .default_label
-                                .merge(x: 43,
-                                        y: 40 , text: "LEVEL #{@level_num}",
+                                .merge(x: 42,
+                                        y: 30, text: "LEVEL #{@level_num}",
                                         alignment_enum: 1)
+
     end
 
     args.nokia.primitives << $level_box.border!
@@ -70,6 +95,13 @@ class Game < Scene
     args.nokia.sprites << @level.backgrounds if @level.backgrounds
     args.nokia.solids << @level.blocks
     args.nokia.sprites << @level.spikes
+
+
+    if @time - @level.portal.time < PORTAL_TIME
+      frame = (@time - @level.portal.time).idiv(5)
+      args.nokia.sprites << @level.portal.merge(path: "sprites/portal#{frame}.png")
+    end
+
 
     goal_frame = (args.state.tick_count/30).floor%2
     if @level.goal
@@ -88,6 +120,14 @@ class Game < Scene
 
     if @level.particles
       args.nokia.solids << @level.particles
+    end
+
+    if @in_transition
+      args.nokia.sprites << {
+        x: 168*(TRANSITION_TIME-@transition_time)/TRANSITION_TIME*2 - 84,
+        y: 0, h: 48, w: 84,
+        path: :block
+        }
     end
   end
 
@@ -122,10 +162,6 @@ class Game < Scene
     reset_level if (collide? @level.player, @level.spikes).size > 0
 
     next_level if (collide? @level.player, [@level.goal]).size > 0
-
-    if @level.particles
-      @level.particles = move_particles @level.particles
-    end
   end
 
   def unfreeze fires
@@ -162,10 +198,27 @@ class Game < Scene
     point = { x: g.x + g.w/2,
               y: g.y + g.h/2 }
     @level.particles = create_explosion point
-    play_sound args, :goal
-    # change level
-    @level_num += 1
-    load_level
+    play_sound args, :portal
+
+    @in_transition = true
+    @transition_time = TRANSITION_TIME
+  end
+
+
+  TRANSITION_TIME = 60
+  def update_transition
+    return if !@in_transition
+
+    @transition_time -= 1
+
+    @in_transition = false if @transition_time <= 0
+
+    if @transition_time == (TRANSITION_TIME/2)
+      # change level
+      @level_num += 1
+      load_level
+    end
+
   end
 
   def reset_level
@@ -174,7 +227,7 @@ class Game < Scene
               y: p.y + p.h/2 }
     @level.particles = create_explosion point
     @deaths += 1
-    play_sound args, :die
+    play_sound args, :portal
     load_level true
     @pause = false
   end
@@ -190,6 +243,8 @@ class Game < Scene
       @level.spikes ||= []
       @level.holes ||= []
       @level.particles = particles
+      player = @level.player
+      @level.portal = {x: player.x - 2, y: player.y - 2, w: 12, h: 12, time: @time}
       if @level.goal
         @level.goal = nil
       end
@@ -199,7 +254,7 @@ class Game < Scene
   end
 
   def end_game
-    @next_scene = EndScene.new(@deaths)
+    @next_scene = EndScene.new(@deaths,@time)
     @over = true
   end
 

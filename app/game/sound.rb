@@ -1,6 +1,6 @@
 SOUND_FILES = {
   :jump => 'blip4.wav',
-  :die => 'odd1.wav',
+  :portal => 'odd1.wav',
   :goal => 'blip11.wav',
   :evolve => 'odd3.wav',
   :start => 'ring1.wav'

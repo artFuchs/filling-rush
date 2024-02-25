@@ -63,19 +63,11 @@ def set_player_state level
   below = level.player.merge(y: level.player.y-1)
   feet = below.merge(x: below.x+below.w/2-1, w: 2)
 
-  has_fallen = level.player.y+level.player.h+1 < 0
-  if has_fallen
-    level.player.fallen = true
-    return
-  end
-
-  is_falling = (collide? feet, holes).size > 0 || feet.y < $level_box.y
-  if is_falling
-    level.player.state = :air
-    level.player.falling = true
-    return true
-  else
-    level.player.falling = false
+  if level.player.w == 12
+    level.player.w = 8
+    level.player.h = 8
+    level.player.x += 2
+    level.player.y += 2
   end
 
   is_on_ground = (collide? below, blocks).size > 0 || below.y == $level_box.y
