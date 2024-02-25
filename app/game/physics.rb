@@ -39,9 +39,8 @@ def move_restricting_to_borders obj, borders, holes
   dy = obj.y + vel_v
 
   
-  bellow = obj.merge(y: obj.y-1)
-  feet = bellow.merge(x: bellow.x+bellow.w/2, w: 0)
-  is_falling = (collide? feet, holes).size > 0 || bellow.y < $level_box.y
+  below = obj.merge(y: obj.y-1)
+  is_falling = (inside? below, holes).size > 0 || below.y < $level_box.y
   if is_falling
     return obj.merge(x: dx, y: dy, vel_h: vel_h, vel_v: vel_v)
   end
@@ -153,6 +152,16 @@ def collide? obj, colliders
       if (c.has_key? :x) && (c.has_key? :y) && (c.has_key? :w) && (c.has_key? :h)
         obj.intersect_rect? c
       end
+    end
+  end
+end
+
+def inside? obj, areas
+  return if !obj
+  areas.find_all do |c|
+    if c && (c.has_key? :x) && (c.has_key? :y) && (c.has_key? :w) && (c.has_key? :h)
+      (obj.intersect_rect? c) && (obj.x >= c.x) && (obj.x+obj.w <= c.x+c.w)
+
     end
   end
 end
