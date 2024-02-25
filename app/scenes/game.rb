@@ -40,6 +40,7 @@ class Game < Scene
 
     reset_level if args.nokia.keyboard.key_down.r or args.nokia.keyboard.key_down.backspace
 
+
     if !@pause
       player_inputs args, @level.player
     end
@@ -108,6 +109,7 @@ class Game < Scene
 
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.blocks
+    @level.player = make_player_fall @level.player
     
     cols = collide? @level.player, @level.fires
     if cols.size > 0
@@ -118,7 +120,7 @@ class Game < Scene
       end
     end
 
-    if @level.player.fallen
+    if player_has_fallen? @level.player
       reset_level
     end
     
@@ -167,12 +169,17 @@ class Game < Scene
   def load_level reset=false
     parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
     if parsed_level
+      particles = [] 
+      particles = @level.particles if @level
       @level = parsed_level
+      @level.blocks ||= []
+      @level.fires ||= []
+      @level.spikes ||= []
+      @level.holes ||= []
+      @level.particles = particles
     else
       end_game
     end
-
-    @level.player = parsed_level.player
   end
 
   def end_game
