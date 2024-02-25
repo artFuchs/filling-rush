@@ -28,7 +28,7 @@ class LevelEditor < Scene
       spikes: [],
       fire: {},
       holes: [],
-      backgrounds: []
+      backgrounds: [],
     }
   end
 

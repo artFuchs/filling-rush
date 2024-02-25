@@ -113,6 +113,8 @@ class Game < Scene
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.holes, @level.blocks
     
+    break_weak_blocks
+
     cols = collide? @level.player, @level.fires
     if cols.size > 0
       if @level.player.state == :frozen || @level.player.state == :melting
@@ -152,6 +154,19 @@ class Game < Scene
     parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
     if parsed_level && parsed_level.goal
       @level.goal = parsed_level.goal
+    end
+  end
+
+  def break_weak_blocks
+    return if ![:frozen,:melting].include? @level.player.state
+
+    below = @level.player.merge(y: @level.player.y - 1)
+    weak_blocks = @level.blocks.find_all do |b|
+      b.h == 1
+    end
+    cols = collide? below, weak_blocks
+    @level.blocks.reject! do |b|
+      cols.include? b
     end
   end
   
