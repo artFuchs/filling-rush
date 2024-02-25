@@ -46,9 +46,6 @@ class Game < Scene
   end
 
   def render
-    top = $level_box.y + $level_box.h + 8
-
-
     minutes = (@time/(3600)).floor
     seconds = (@time/(60)).floor % 60
     minutes = 99 if minutes > 99
@@ -59,25 +56,25 @@ class Game < Scene
       args.nokia.labels << args.nokia
                                 .default_label
                                 .merge(x: 42,
-                                       y: top-30, text: "PAUSED",
+                                       y: 24, text: "PAUSED",
                                        alignment_enum: 1)
 
       args.nokia.labels << args.nokia
                                 .default_label
-                                .merge(x: 2,
-                                      y: top - 12, text: "D: #{@deaths}",
+                                .merge(x: 3,
+                                      y: 40, text: "D: #{@deaths}",
                                       alignment_enum: 0)
   
       args.nokia.labels << args.nokia
                                 .default_label
                                 .merge(x: 43,
-                                        y: top - 12 , text: "LEVEL #{@level_num}",
+                                        y: 40 , text: "LEVEL #{@level_num}",
                                         alignment_enum: 1)
 
       args.nokia.labels << args.nokia
                                 .default_label
                                 .merge(x: 82,
-                                       y: top - 12, text: time_str,
+                                       y: 40, text: time_str,
                                        alignment_enum: 2)
     end
 
