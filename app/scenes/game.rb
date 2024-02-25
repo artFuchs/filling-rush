@@ -109,12 +109,13 @@ class Game < Scene
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.blocks
     
-    if @level.player.state == :frozen
-      p @level.fires
-      cols = collide? @level.player, @level.fires
-      unfreeze cols if cols.length > 0
-    else
-      reset_level if (collide? @level.player, @level.fires).size > 0
+    cols = collide? @level.player, @level.fires
+    if cols.size > 0
+      if @level.player.state == :frozen || @level.player.state == :melting
+        unfreeze cols
+      else
+        reset_level
+      end
     end
 
     if @level.player.fallen
@@ -129,12 +130,8 @@ class Game < Scene
   end
 
   def unfreeze fires
-    bellow = @level.player.merge(y: @level.player.y-1)
-    if (collide? bellow, @level.blocks).size > 0 || bellow.y == $level_box.y
-      @level.player.state = :ground
-    else
-      @level.player.state = :air
-    end
+    @level.player.state = :melting
+    @level.player.time_to_melt /= 2 if @level.player.time_to_melt != nil
     @level.fires.reject! do |f|
       fires.include? f
     end

@@ -11,7 +11,7 @@ end
 
 def move_object obj, borders, colliders
   return obj if obj.state == :using_power
-  if obj.state == :frozen
+  if obj.state == :frozen || obj.state == :melting
     apply_inertia obj
   end
   future = move_restricting_to_borders obj, borders
