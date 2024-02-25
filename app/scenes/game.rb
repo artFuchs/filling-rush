@@ -47,34 +47,38 @@ class Game < Scene
 
   def render
     top = $level_box.y + $level_box.h + 8
-    args.nokia.labels << args.nokia
-                              .default_label
-                              .merge(x: 2,
-                                     y: top, text: "D: #{@deaths}",
-                                     alignment_enum: 0)
 
-   args.nokia.labels << args.nokia
-                             .default_label
-                             .merge(x: 42,
-                                    y: top, text: "LEVEL #{@level_num}",
-                                    alignment_enum: 1)
 
     minutes = (@time/(3600)).floor
     seconds = (@time/(60)).floor % 60
     minutes = 99 if minutes > 99
     time_str = "%02d:%02d"%[minutes,seconds]
-    args.nokia.labels << args.nokia
-                             .default_label
-                             .merge(x: 83,
-                                    y: top, text: time_str,
-                                    alignment_enum: 2)
 
-    if @pause
+
+    if @pause      
       args.nokia.labels << args.nokia
                                 .default_label
                                 .merge(x: 42,
-                                       y: top-5, text: "PAUSED",
+                                       y: top-30, text: "PAUSED",
                                        alignment_enum: 1)
+
+      args.nokia.labels << args.nokia
+                                .default_label
+                                .merge(x: 2,
+                                      y: top - 12, text: "D: #{@deaths}",
+                                      alignment_enum: 0)
+  
+      args.nokia.labels << args.nokia
+                                .default_label
+                                .merge(x: 43,
+                                        y: top - 12 , text: "LEVEL #{@level_num}",
+                                        alignment_enum: 1)
+
+      args.nokia.labels << args.nokia
+                                .default_label
+                                .merge(x: 82,
+                                       y: top - 12, text: time_str,
+                                       alignment_enum: 2)
     end
 
     args.nokia.borders << $level_box
@@ -165,7 +169,7 @@ class Game < Scene
       else
         @level.blocks = parsed_level.blocks
         @level.goal = parsed_level.goal
-        @level.fire = parsed_level.fire
+        @level.fires = parsed_level.fires
       end
     else
       end_game
