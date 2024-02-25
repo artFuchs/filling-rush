@@ -78,7 +78,8 @@ class Game < Scene
                                        alignment_enum: 2)
     end
 
-    args.nokia.borders << $level_box
+    args.nokia.primitives << $level_box.border!
+    args.nokia.primitives << @level.holes.map{|h| h.sprite!}
     args.nokia.solids << @level.blocks
     args.nokia.sprites << @level.spikes
 
@@ -86,7 +87,7 @@ class Game < Scene
     args.nokia.sprites << @level.goal.merge(path: "sprites/exit#{goal_frame}.png")
 
     set_player_sprite
-    args.nokia.sprites << @level.player
+    args.nokia.primitives << @level.player.sprite!
 
     fire_frame = args.state.tick_count.idiv(15)%5
     args.nokia.sprites << @level.fire.merge(path: "sprites/fire#{fire_frame}.png")
@@ -115,6 +116,10 @@ class Game < Scene
     else
       reset_level if (collide? @level.player, @level.fires).size > 0
     end
+
+    if @level.player.fallen
+      reset_level
+    end
     
     next_level if (collide? @level.player, [@level.goal]).size > 0
 
@@ -125,7 +130,7 @@ class Game < Scene
 
   def unfreeze fires
     bellow = @level.player.merge(y: @level.player.y-1)
-    if (collide? bellow, @level.blocks).size > 0 || bellow.y <= $level_box.y
+    if (collide? bellow, @level.blocks).size > 0 || bellow.y == $level_box.y
       @level.player.state = :ground
     else
       @level.player.state = :air

@@ -31,6 +31,10 @@ def move_restricting_to_borders obj, borders
   dx = obj.x + vel_h
   dy = obj.y + vel_v
 
+  if obj.falling
+    return obj.merge(x: dx, y: dy, vel_h: vel_h, vel_v: vel_v)
+  end
+
   min_x = borders.x+1
   max_x = borders.x+borders.w-1
   min_y = borders.y+1
