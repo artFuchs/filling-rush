@@ -85,7 +85,9 @@ class Game < Scene
     args.nokia.sprites << @level.spikes
 
     goal_frame = (args.state.tick_count/30).floor%2
-    args.nokia.sprites << @level.goal.merge(path: "sprites/exit#{goal_frame}.png")
+    if @level.goal
+      args.nokia.sprites << @level.goal.merge(path: "sprites/exit#{goal_frame}.png")
+    end
 
     set_player_sprite
     args.nokia.primitives << @level.player.sprite!
@@ -119,6 +121,11 @@ class Game < Scene
       end
     end
 
+    if @level.fires.size == 0
+      display_goal
+    end
+
+
     if player_has_fallen? @level.player
       reset_level
     end
@@ -139,6 +146,13 @@ class Game < Scene
     @level.player.time_to_melt /= 2 if @level.player.time_to_melt != nil
     @level.fires.reject! do |f|
       fires.include? f
+    end
+  end
+
+  def display_goal
+    parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
+    if parsed_level && parsed_level.goal
+      @level.goal = parsed_level.goal
     end
   end
   
@@ -176,6 +190,9 @@ class Game < Scene
       @level.spikes ||= []
       @level.holes ||= []
       @level.particles = particles
+      if @level.goal
+        @level.goal = nil
+      end
     else
       end_game
     end
