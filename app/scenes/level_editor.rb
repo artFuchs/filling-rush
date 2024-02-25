@@ -21,7 +21,8 @@ class LevelEditor < Scene
       goal: {},
       fires: [],
       spikes: [],
-      fire: {}
+      fire: {},
+      holes: [],
     }
   end
 
@@ -41,6 +42,7 @@ class LevelEditor < Scene
   end
 
   def defaults
+    @level.holes ||= []
     @level.fires ||= []
     @level.spikes ||= []
     @level.blocks ||= []
@@ -85,6 +87,7 @@ class LevelEditor < Scene
     @block_type = :spike if args.nokia.keyboard.two
     @block_type = :fire if args.nokia.keyboard.three
     @block_type = :big_fire if args.nokia.keyboard.four
+    @block_type = :holes if args.nokia.keyboard.five
 
     block_collection = case @block_type 
     when :block
@@ -95,9 +98,19 @@ class LevelEditor < Scene
       @level.fires
     when :big_fire
       @level.fires
+    when :holes
+      @level.holes
     end
 
     args.labels << {x: 10, y: 70, text: "blocks = #{block_collection}"}.merge(r:255, g:255, b:255)
+
+    if args.inputs.mouse.button_right
+      mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
+      case @block_type 
+      when :holes
+        @level.holes << mouse_pos.merge(w:10, h:1, r:199, g:240, b:216)
+      end
+    end
 
     if mouse_inside_level_area?
       mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
@@ -241,7 +254,8 @@ class LevelEditor < Scene
   end
 
   def render
-    args.nokia.borders << $level_box
+    args.nokia.primitives << $level_box.border!
+    args.nokia.primitives << @level.holes.map{|h| h.sprite!}
     
     white = {r: 255, g: 255, b: 255}
     args.labels << {x: 10, y: grid.top - 10, text: "LEVEL #{@level_num}"}.merge(white)
@@ -254,6 +268,7 @@ class LevelEditor < Scene
     args.nokia.solids << @level.blocks
     args.nokia.sprites << @level.fires
     args.nokia.sprites << @level.spikes
+    
 
 
     if @level.player
