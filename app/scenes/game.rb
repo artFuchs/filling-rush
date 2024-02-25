@@ -254,7 +254,7 @@ class Game < Scene
   end
 
   def end_game
-    @next_scene = EndScene.new(@deaths,@time)
+    @next_scene = EndScene.new(@deaths)
     @over = true
   end
 
