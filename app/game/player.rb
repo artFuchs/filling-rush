@@ -5,7 +5,11 @@
 # air
 # using_power
 # frozen
+# melting
 # dead
+
+TIME_TO_MELT = 60
+TIME_TO_FREEZE = 60
 
 def default_player
   {
@@ -25,19 +29,34 @@ def set_player_state level
   args.labels << {x: 10, y: 40,
   text: "player.vel_v = #{@level.player.vel_v}",
   r: 255, b:255, g:255}
+  args.labels << {x: 10, y: 60,
+  text: "player.vel_h = #{@level.player.vel_h}",
+  r: 255, b:255, g:255}
 
   if level.player.state == :using_power  
-    level.player.state = :frozen if args.state.tick_count - level.player.used_power > 60
+    level.player.time_to_freeze ||= TIME_TO_FREEZE
+    level.player.time_to_freeze -= 1
+    if (level.player.time_to_freeze <= 0)
+      level.player.time_to_freeze = nil 
+      level.player.state = :frozen
+    end
     return
   end
 
   return if level.player.state == :frozen
 
+  if level.player.state == :melting
+    level.player.time_to_melt ||= TIME_TO_MELT # 1 second
+    level.player.time_to_melt -= 1
+    if (level.player.time_to_melt <= 0)
+      level.player.time_to_melt = nil 
+    end
+    return if level.player.time_to_melt != nil;
+  end
+
   blocks = level.blocks
   bellow = level.player.merge(y: level.player.y-1)
   is_on_ground = (collide? bellow, blocks).size > 0 || bellow.y <= $level_box.y
-
-  return if (level.player.state == :frozen)
 
   if is_on_ground
     level.player.state = :ground
@@ -49,7 +68,7 @@ end
 
 
 def player_inputs args, player  
-  if player.state == :frozen || player.state == :using_power
+  if player.state == :frozen || player.state == :melting || player.state == :using_power
     return
   end
 
@@ -113,9 +132,14 @@ def set_player_sprite
       player.path = "sprites/player_falling.png"
     end
   when :using_power
-    frame = (tick_count - player.used_power).idiv(15) % 4
+    return if player.time_to_freeze == nil
+    frame = (TIME_TO_FREEZE - player.time_to_freeze).idiv(15)
     player.path = "sprites/player_freezing#{frame}.png"
   when :frozen
     player.path = "sprites/player_frozen.png"
+  when :melting
+    return if player.time_to_melt == nil
+    frame = (TIME_TO_MELT - player.time_to_melt).idiv(15);
+    player.path = "sprites/player_melting#{frame}.png"
   end
 end
