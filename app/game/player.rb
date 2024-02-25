@@ -26,22 +26,16 @@ def set_player_state level
   text: "player.vel_v = #{@level.player.vel_v}",
   r: 255, b:255, g:255}
 
-  return if level.player.state == :dead
-
   if level.player.state == :using_power  
     level.player.state = :frozen if args.state.tick_count - level.player.used_power > 60
     return
   end
 
+  return if level.player.state == :frozen
+
   blocks = level.blocks
   bellow = level.player.merge(y: level.player.y-1)
   is_on_ground = (collide? bellow, blocks).size > 0 || bellow.y <= $level_box.y
-
-  
-  if level.player.state == :frozen && is_on_ground && level.player.vel_v < - 0.7
-     p "dead"
-     level.player.state = :dead
-  end
 
   return if (level.player.state == :frozen)
 

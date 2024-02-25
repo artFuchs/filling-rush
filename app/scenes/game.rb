@@ -79,6 +79,7 @@ class Game < Scene
 
     args.nokia.borders << $level_box
     args.nokia.solids << @level.blocks
+    args.nokia.sprites << @level.spikes
 
     goal_frame = (args.state.tick_count/30).floor%2
     args.nokia.sprites << @level.goal.merge(path: "sprites/exit#{goal_frame}.png")
@@ -87,7 +88,11 @@ class Game < Scene
     args.nokia.sprites << @level.player
 
     fire_frame = args.state.tick_count.idiv(15)%5
-    args.nokia.sprites << @level.fire.merge(path: "sprites/small_fire#{fire_frame}.png")
+    args.nokia.sprites << @level.fire.merge(path: "sprites/fire#{fire_frame}.png")
+
+    args.nokia.sprites << @level.fires.map do |f| 
+      f.merge(path: "sprites/small_fire#{fire_frame}.png")
+    end
 
     if @level.particles
       args.nokia.solids << @level.particles
@@ -103,9 +108,11 @@ class Game < Scene
     @level.player = move_object @level.player, $level_box, @level.blocks
     
     if @level.player.state == :frozen
-      unfreeze if (collide? @level.player, [@level.fire]).size > 0
+      p @level.fires
+      cols = collide? @level.player, @level.fires
+      unfreeze cols if cols.length > 0
     else
-      reset_level if (collide? @level.player, [@level.fire]).size > 0
+      reset_level if (collide? @level.player, @level.fires).size > 0
     end
     
     next_level if (collide? @level.player, [@level.goal]).size > 0
@@ -115,14 +122,16 @@ class Game < Scene
     end
   end
 
-  def unfreeze
+  def unfreeze fires
     bellow = @level.player.merge(y: @level.player.y-1)
     if (collide? bellow, @level.blocks).size > 0 || bellow.y <= $level_box.y
       @level.player.state = :ground
     else
       @level.player.state = :air
     end
-    @level.fire = { x: 0, y: 0, w: 0, h: 0 }
+    @level.fires.reject! do |f|
+      fires.include? f
+    end
   end
   
   def next_level

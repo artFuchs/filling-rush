@@ -5,7 +5,7 @@ require 'app/scenes/end_scene.rb'
 require 'app/scenes/game.rb'
 require 'app/scenes/level_editor.rb'
 
-$level_box = {x: 2, y: 2, w: 80, h: 36}
+$level_box = {x: 2, y: 2, w: 80, h: 44}
 $scene = nil
 def tick args
 
