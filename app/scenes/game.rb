@@ -117,7 +117,11 @@ class Game < Scene
       end
     end
     
-    next_level if (collide? @level.player, [@level.goal]).size > 0
+    reset_level if (collide? @level.player, @level.spikes).size > 0
+
+    if @level.player.state == :frozen
+      next_level if (collide? @level.player, [@level.goal]).size > 0
+    end
 
     if @level.particles
       @level.particles = move_particles @level.particles
@@ -158,21 +162,12 @@ class Game < Scene
   def load_level reset=false
     parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
     if parsed_level
-      if !@level
-        @level = parsed_level
-        @level.player.merge(default_player)
-      else
-        @level.blocks = parsed_level.blocks
-        @level.goal = parsed_level.goal
-        @level.fires = parsed_level.fires
-      end
+      @level = parsed_level
     else
       end_game
     end
 
-    if reset
-      @level.player = parsed_level.player
-    end
+    @level.player = parsed_level.player
   end
 
   def end_game

@@ -1,0 +1,1 @@
+{:blocks=>[{:x=>20, :y=>3, :w=>61, :h=>8, :r=>67, :g=>82, :b=>61, :a=>255}], :player=>{:w=>8, :h=>8, :path=>"sprites/player0.png", :x=>7, :y=>3, :a=>255}, :goal=>{:w=>8, :h=>8, :path=>"sprites/exit0.png", :x=>72, :y=>13, :a=>255}, :fires=>[], :spikes=>[], :fire=>{:a=>255}}
