@@ -15,8 +15,11 @@ def move_object obj, borders, holes, colliders
     apply_inertia obj
   end
   future = move_restricting_to_borders obj, borders, holes
-  obj2 = move_checking_collisions obj, future, colliders
-  return obj2
+  future = move_checking_collisions obj, future, colliders
+  if future.state != :ground
+    future = fix_clipping future, colliders
+  end
+  return future
 end
 
 def apply_inertia obj
@@ -35,7 +38,7 @@ def move_restricting_to_borders obj, borders, holes
   dx = obj.x + vel_h
   dy = obj.y + vel_v
 
-
+  
   bellow = obj.merge(y: obj.y-1)
   feet = bellow.merge(x: bellow.x+bellow.w/2, w: 0)
   is_falling = (collide? feet, holes).size > 0 || bellow.y < $level_box.y
@@ -76,12 +79,13 @@ def move_checking_collisions obj, future, colliders
   vel_v = future.vel_v
   dx = future.x
   vel_h = future.vel_h
+  
   for col in cols_y
     if col
       # if obj is falling on top of collider, stop
       if vel_v < 0 && obj.y >= col.y+col.h-1
         vel_v = 0
-        dy = col.y+col.h
+          dy = col.y+col.h
       elsif vel_v > 0 && obj.y <= col.y-obj.h+1
         vel_v = 0
         dy = col.y-obj.h
@@ -102,13 +106,53 @@ def move_checking_collisions obj, future, colliders
   return future.merge(x: dx, y: dy, vel_h: vel_h, vel_v: vel_v)
 end
 
+def fix_clipping obj, colliders
+  cols = collide? obj, colliders
+  if cols.size > 0
+    side = get_most_collided_side obj, colliders
+    case side
+    when :top
+      obj = obj.merge(y: cols[0].y-obj.h)
+    when :left
+      obj = obj.merge(x: cols[0].x+cols[0].w)
+    when :right
+      obj = obj.merge(x: cols[0].x-obj.w)
+    end
+  end
+  return obj
+end
 
+def get_most_collided_side obj, colliders
+  cols = collide? obj, colliders
+  if cols.size > 0
+    count = {top: 0, left: 0, right: 0}
+    top = {x: obj.x, y: obj.y+obj.h, w: obj.w, h: 1}
+    left = {x: obj.x, y: obj.y, w: 1, h: obj.h}
+    right = {x: obj.x+obj.w, y: obj.y, w: 1, h: obj.h}
+    for col in cols
+      count[:top] += calculate_intersected_area top, col
+      count[:left] += calculate_intersected_area left, col
+      count[:right] += calculate_intersected_area right, col
+    end
+    return count.max_by{|side,value| value}[0]
+  end
+end
+
+def calculate_intersected_area obj, col
+  x = [obj.x, col.x].max
+  y = [obj.y, col.y].max
+  w = [obj.x+obj.w, col.x+col.w].min - x
+  h = [obj.y+obj.h, col.y+col.h].min - y
+  return w*h
+end
 
 def collide? obj, colliders
   return if !obj
   colliders.find_all do |c|
-    if (c.has_key? :x) && (c.has_key? :y) && (c.has_key? :w) && (c.has_key? :h)
-      obj.intersect_rect? c
+    if c
+      if (c.has_key? :x) && (c.has_key? :y) && (c.has_key? :w) && (c.has_key? :h)
+        obj.intersect_rect? c
+      end
     end
   end
 end
