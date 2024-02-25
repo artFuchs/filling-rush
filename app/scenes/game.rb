@@ -81,6 +81,7 @@ class Game < Scene
 
     args.nokia.primitives << $level_box.border!
     args.nokia.primitives << @level.holes.map{|h| h.sprite!}
+    args.nokia.sprites << @level.backgrounds if @level.backgrounds
     args.nokia.solids << @level.blocks
     args.nokia.sprites << @level.spikes
 
@@ -132,9 +133,7 @@ class Game < Scene
     
     reset_level if (collide? @level.player, @level.spikes).size > 0
 
-    if @level.player.state == :frozen
-      next_level if (collide? @level.player, [@level.goal]).size > 0
-    end
+    next_level if (collide? @level.player, [@level.goal]).size > 0
 
     if @level.particles
       @level.particles = move_particles @level.particles

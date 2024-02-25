@@ -4,10 +4,15 @@ class LevelEditor < Scene
   def initialize(level_num=1) 
     @level_num = level_num
     @block_type = :block
+    @block_num = 0
     @selected_blocks = []
     @level = default_level
     @time = 0
     load_level
+  end
+
+  def level
+    return @level 
   end
 
   def next_scene
@@ -23,6 +28,7 @@ class LevelEditor < Scene
       spikes: [],
       fire: {},
       holes: [],
+      backgrounds: []
     }
   end
 
@@ -46,6 +52,7 @@ class LevelEditor < Scene
     @level.fires ||= []
     @level.spikes ||= []
     @level.blocks ||= []
+    @level.backgrounds ||= []
   end
 
   def input
@@ -83,28 +90,16 @@ class LevelEditor < Scene
     msg += "ctrl" if ctrl 
     args.labels << {x: args.grid.right-10, y: 20, text: msg, alignment_enum: 2, r: 255, g: 255, b: 255}
 
-    @block_type = :block if args.nokia.keyboard.one 
-    @block_type = :spike if args.nokia.keyboard.two
-    @block_type = :fire if args.nokia.keyboard.three
-    @block_type = :big_fire if args.nokia.keyboard.four
-    @block_type = :holes if args.nokia.keyboard.five
-
-    block_collection = case @block_type 
-    when :block
-      @level.blocks
-    when :spike
-      @level.spikes
-    when :fire
-      @level.fires
-    when :big_fire
-      @level.fires
-    when :holes
-      @level.holes
-    end
-
+    set_block_type()
     args.labels << {x: 10, y: 70, text: "blocks = #{block_collection}"}.merge(r:255, g:255, b:255)
 
     mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
+
+    if !ctrl 
+      @block_num += 1 if args.nokia.keyboard.key_down.plus || args.nokia.keyboard.key_down.equal_sign
+      @block_num -= 1  if args.nokia.keyboard.key_down.hyphen || args.nokia.keyboard.key_down.underscore
+    end
+
 
     if args.inputs.mouse.button_left
       if not shift
@@ -117,16 +112,8 @@ class LevelEditor < Scene
     if args.inputs.mouse.button_right
       block = find_block block_collection, mouse_pos
       if !block
-        case @block_type 
-        when :fire
-          @level.fires << mouse_pos.merge(w:4, h:4, path: 'sprites/small_fire0.png')
-        when :spike
-          @level.spikes << mouse_pos.merge(w:4, h:4, path: 'sprites/spike.png')
-        when :holes
-          @level.holes << mouse_pos.merge(w:1, h:1, r:199, g:240, b:216)
-        else
-          @level.blocks << mouse_pos.merge(w:1, h:1)
-        end
+        block = blockToInsert.merge(mouse_pos)
+        block_collection << block if block 
       end
     end
 
@@ -148,7 +135,7 @@ class LevelEditor < Scene
     # clear level
     if args.nokia.keyboard.backspace
       @level = default_level
-      @selected_blocks = [] if !ctrl && !shift
+      @selected_blocks = []
     end
 
     if args.nokia.keyboard.j and @selected_blocks.size > 1 && 
@@ -180,6 +167,68 @@ class LevelEditor < Scene
       end
       @selected_blocks = []
     end
+  end
+
+  def set_block_type
+    @block_type = :block if args.nokia.keyboard.one 
+    @block_type = :spike if args.nokia.keyboard.two
+    @block_type = :fire if args.nokia.keyboard.three
+    @block_type = :big_fire if args.nokia.keyboard.four
+    @block_type = :holes if args.nokia.keyboard.five
+    @block_type = :tutorial if args.nokia.keyboard.zero
+  end
+
+  def block_collection
+    case @block_type 
+    when :block
+      @level.blocks
+    when :spike
+      @level.spikes
+    when :fire
+      @level.fires
+    when :big_fire
+      @level.fires
+    when :holes
+      @level.holes
+    when :tutorial
+      @level.backgrounds
+    end
+  end
+
+
+  def blockToInsert
+    case @block_type
+    when :fire
+      return {w:4, h:4, path: 'sprites/small_fire0.png'}.sprite!
+    when :spike
+      return {w:4, h:4, path: 'sprites/spike.png'}.sprite!
+    when :holes
+      return {w:1, h:1, r:199, g:240, b:216}.solid!
+    when :tutorial
+      return tutorialBlock.sprite!
+    else
+      return {w:1, h:1}.solid!
+    end
+  end
+
+  def tutorialBlock
+    @block_num = 0 if @block_num < 0
+    @block_num = 4 if @block_num > 4
+
+    path = "sprites/tutorials/#{@block_num}.png"
+
+    case @block_num
+    when 0
+      {w: 26, h: 25}
+    when 1
+      {w: 26, h: 15}
+    when 2
+      {w: 48, h: 15}
+    when 3
+      {w: 29, h: 14}
+    else
+      {w: 39, h: 28}
+    end.merge(path:path)
   end
 
   def change_blocks_size dx, dy
@@ -226,7 +275,7 @@ class LevelEditor < Scene
       @level.blocks.delete(b)
     end
     block = {x: min_x, y: min_y, w: max_x - min_x, h: max_y - min_y}
-    @level.blocks. << block
+    @level.blocks << block
     @selected_blocks = [block]
   end
 
@@ -269,11 +318,17 @@ class LevelEditor < Scene
     args.labels << {x: 10, y: 30, text: "selected_blocks = #{@selected_blocks}"}.merge(white)
     args.labels << {x: 10, y: 50, text: "current_block_type = #{@block_type}"}.merge(white)
 
-
-
+    args.nokia.sprites << @level.backgrounds
     args.nokia.solids << @level.blocks
     args.nokia.sprites << @level.fires
     args.nokia.sprites << @level.spikes
+
+
+    
+    if @selected_blocks.size == 0
+      mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
+      args.nokia.primitives << blockToInsert.merge(a: 100).merge(mouse_pos)
+    end
     
 
 
