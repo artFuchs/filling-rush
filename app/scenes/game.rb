@@ -158,6 +158,7 @@ class Game < Scene
     @deaths += 1
     play_sound args, :die
     load_level true
+    @pause = false
   end
 
   def load_level reset=false
