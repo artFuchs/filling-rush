@@ -3,6 +3,7 @@ class LevelEditor < Scene
 
   def initialize(level_num=1) 
     @level_num = level_num
+    @block_type = :block
     @selected_blocks = []
     @level = default_level
     @time = 0
@@ -18,7 +19,9 @@ class LevelEditor < Scene
       blocks: [],
       player: {},
       goal: {},
-      fire: {},
+      fires: [],
+      spikes: [],
+      fire: {}
     }
   end
 
@@ -32,10 +35,16 @@ class LevelEditor < Scene
   end
 
   def tick
+    defaults
     input
     render
   end
 
+  def defaults
+    @level.fires ||= []
+    @level.spikes ||= []
+    @level.blocks ||= []
+  end
 
   def input
 
@@ -46,15 +55,8 @@ class LevelEditor < Scene
       save_level if args.nokia.keyboard.key_down.s
       load_level if args.nokia.keyboard.key_down.o
       #controls to change level number
-      if args.nokia.keyboard.key_down.plus || args.nokia.keyboard.key_down.equal_sign
-        @level_num += 1
-        @selected_blocks = []
-        load_level
-      elsif args.nokia.keyboard.key_down.hyphen || args.nokia.keyboard.key_down.underscore
-        @level_num -= 1
-        @selected_blocks = []
-        load_level
-      end
+      change_level(1) if args.nokia.keyboard.key_down.plus || args.nokia.keyboard.key_down.equal_sign
+      change_level(-1) if args.nokia.keyboard.key_down.hyphen || args.nokia.keyboard.key_down.underscore
     end
 
     # if enter is pressed, play the level
@@ -63,9 +65,39 @@ class LevelEditor < Scene
     end
   end
 
+  def change_level(dl)
+    @level_num += dl
+    @level_num = 1 if @level_num < 1
+    @selected_blocks = []
+    load_level
+  end 
+
   def edit_level_input
-    shift = args.nokia.keyboard.shift_left
+    shift = args.nokia.keyboard.shift
     ctrl = args.nokia.keyboard.control
+
+    msg = "" 
+    msg += "shift " if shift
+    msg += "ctrl" if ctrl 
+    args.labels << {x: args.grid.right-10, y: 20, text: msg, alignment_enum: 2, r: 255, g: 255, b: 255}
+
+    @block_type = :block if args.nokia.keyboard.one 
+    @block_type = :spike if args.nokia.keyboard.two
+    @block_type = :fire if args.nokia.keyboard.three
+    @block_type = :big_fire if args.nokia.keyboard.four
+
+    block_collection = case @block_type 
+    when :block
+      @level.blocks
+    when :spike
+      @level.spikes
+    when :fire
+      @level.fires
+    when :big_fire
+      @level.fires
+    end
+
+    args.labels << {x: 10, y: 70, text: "blocks = #{block_collection}"}.merge(r:255, g:255, b:255)
 
     if mouse_inside_level_area?
       mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
@@ -74,21 +106,27 @@ class LevelEditor < Scene
         if not shift
           @selected_blocks = []
         end
-        block = find_block mouse_pos
+        block = find_block block_collection, mouse_pos
         @selected_blocks << block if block and !@selected_blocks.include? block
       end
 
       if args.inputs.mouse.button_right
-        block = find_block mouse_pos
+        block = find_block block_collection, mouse_pos
         if !block
-          @level.blocks << mouse_pos.merge(w:1, h:1)
+          case @block_type 
+          when :fire
+            @level.fires << mouse_pos.merge(w:4, h:4, path: 'sprites/small_fire0.png')
+          when :spike
+            @level.spikes << mouse_pos.merge(w:4, h:4, path: 'sprites/spike.png')
+          else
+            @level.blocks << mouse_pos.merge(w:1, h:1)
+          end
         end
       end
 
       obj = nil
       obj = :player if args.inputs.keyboard.p
       obj = :goal if args.inputs.keyboard.g
-      obj = :fire if args.inputs.keyboard.f
       if obj
         if shift
           @level[obj] = {}
@@ -96,7 +134,6 @@ class LevelEditor < Scene
           sprites = {
                       player: { w: 8, h: 8, path: 'sprites/player0.png' },
                       goal: { w: 8, h: 8, path: 'sprites/exit0.png' },
-                      fire: { w: 4, h: 4, path: 'sprites/small_fire0.png' }
                     }
           @level[obj] = sprites[obj].merge(x: mouse_pos.x, y: mouse_pos.y)
         end
@@ -109,62 +146,74 @@ class LevelEditor < Scene
       @selected_blocks = [] if !ctrl && !shift
     end
 
-    if args.nokia.keyboard.j and @selected_blocks.size > 1
-      min_x = 1000
-      min_y = 1000
-      max_x = -1
-      max_y = -1
-      for b in @selected_blocks
-        min_x = b.x if b.x < min_x
-        min_y = b.y if b.y < min_y
-        x = b.x + b.w
-        max_x = x if x > max_x
-        y = b.y + b.h
-        max_y = y if y > max_y
-        @level.blocks.delete(b)
-      end
-      block = {x: min_x, y: min_y, w: max_x - min_x, h: max_y - min_y}
-      @level.blocks. << block
-      @selected_blocks = [block]
+    if args.nokia.keyboard.j and @selected_blocks.size > 1 && 
+      join_blocks
     end
-
 
     dx = args.nokia.keyboard.left_right
     dy = args.nokia.keyboard.up_down
     if (dx != 0 || dy != 0) && @selected_blocks.size > 0 && (passed_time? 5)
-
       for b in @selected_blocks
-        @level.blocks.delete(b)
+        block_collection.delete(b)
       end
 
-      if ctrl #change block size
-        @selected_blocks = @selected_blocks.map do |b|
-          b.merge(w: (b.w+dx).clamp(1,$level_box.w - 2), h: (b.h+dy).clamp(1,$level_box.h - 2))
-        end
+      if shift #change block size
+        change_blocks_size dx, dy
       else # move blocks
-        @selected_blocks = @selected_blocks.map do |b|
-          b.merge(x: (b.x+dx).clamp($level_box.x + 1, $level_box.x + 1 +  $level_box.w - 2 - b.w),
-                  y: (b.y+dy).clamp($level_box.y + 1, $level_box.y + 1 + $level_box.h - 2 - b.h))
-        end
+        move_blocks dx, dy
       end
 
       for b in @selected_blocks
-        @level.blocks << b
+        block_collection << b
       end
     end
 
     # delete blocks
     if args.nokia.keyboard.space
       for b in @selected_blocks
-        @level.blocks.delete(b)
+        block_collection.delete(b)
       end
       @selected_blocks = []
     end
   end
 
+  def change_blocks_size dx, dy
+    return if @block_type != :block
+    @selected_blocks = @selected_blocks.map do |b|
+      b.merge(w: (b.w+dx).clamp(1,$level_box.w - 2), h: (b.h+dy).clamp(1,$level_box.h - 2))
+    end
+  end
 
-  def find_block pos
-    @level.blocks.find do |b|
+  def move_blocks dx, dy
+    @selected_blocks = @selected_blocks.map do |b|
+      b.merge(x: (b.x+dx).clamp($level_box.x + 1, $level_box.x + 1 +  $level_box.w - 2 - b.w),
+              y: (b.y+dy).clamp($level_box.y + 1, $level_box.y + 1 + $level_box.h - 2 - b.h))
+    end
+  end
+
+  def join_blocks
+    return if @block_type != :block
+    min_x = 1000
+    min_y = 1000
+    max_x = -1
+    max_y = -1
+    for b in @selected_blocks
+      min_x = b.x if b.x < min_x
+      min_y = b.y if b.y < min_y
+      x = b.x + b.w
+      max_x = x if x > max_x
+      y = b.y + b.h
+      max_y = y if y > max_y
+      @level.blocks.delete(b)
+    end
+    block = {x: min_x, y: min_y, w: max_x - min_x, h: max_y - min_y}
+    @level.blocks. << block
+    @selected_blocks = [block]
+  end
+
+
+  def find_block blocks, pos
+    blocks.find do |b|
       is_inside? pos, b
     end
   end
@@ -192,21 +241,20 @@ class LevelEditor < Scene
   end
 
   def render
-    args.nokia.labels << args.nokia
-                              .default_label
-                              .merge(x: 2,
-                                     y: 46, text: "H:",
-                                     alignment_enum: 0)
-
-   args.nokia.labels << args.nokia
-                             .default_label
-                             .merge(x: 42,
-                                    y: 46, text: "LEVEL #{@level_num}",
-                                    alignment_enum: 1)
-
     args.nokia.borders << $level_box
+    
+    white = {r: 255, g: 255, b: 255}
+    args.labels << {x: 10, y: grid.top - 10, text: "LEVEL #{@level_num}"}.merge(white)
+    
+    args.labels << {x: 10, y: 30, text: "selected_blocks = #{@selected_blocks}"}.merge(white)
+    args.labels << {x: 10, y: 50, text: "current_block_type = #{@block_type}"}.merge(white)
+
+
 
     args.nokia.solids << @level.blocks
+    args.nokia.sprites << @level.fires
+    args.nokia.sprites << @level.spikes
+
 
     if @level.player
       args.nokia.sprites << @level.player
@@ -220,9 +268,7 @@ class LevelEditor < Scene
       args.nokia.sprites << @level.fire
     end
 
-    args.labels << {x: 10, y: 20,
-                    text: "selected_blocks = #{@selected_blocks}",
-                    r: 255, b:255, g:255}
+
 
     args.primitives << @selected_blocks.map do |b|
       b.merge(x: b.x*NOKIA_ZOOM + NOKIA_X_OFFSET,
