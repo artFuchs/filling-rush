@@ -201,7 +201,7 @@ class LevelEditor < Scene
     when :fire
       return {w:4, h:4, path: 'sprites/small_fire0.png'}.sprite!
     when :spike
-      return {w:4, h:4, path: 'sprites/spike.png'}.sprite!
+      return spikeBlock.sprite!
     when :holes
       return {w:1, h:1, r:199, g:240, b:216}.solid!
     when :tutorial
@@ -213,7 +213,7 @@ class LevelEditor < Scene
 
   def tutorialBlock
     @block_num = 0 if @block_num < 0
-    @block_num = 4 if @block_num > 4
+    @block_num = 5 if @block_num > 5
 
     path = "sprites/tutorials/#{@block_num}.png"
 
@@ -226,9 +226,20 @@ class LevelEditor < Scene
       {w: 48, h: 15}
     when 3
       {w: 29, h: 14}
-    else
+    when 4
       {w: 39, h: 28}
+    when 5
+      {w: 23, h: 33}
     end.merge(path:path)
+  end
+
+  def spikeBlock
+    @block_num = 0 if @block_num < 0
+    @block_num = 3 if @block_num > 3
+
+    { w:4, h:4, path: 'sprites/spike.png',
+      angle: @block_num * 90
+    }
   end
 
   def change_blocks_size dx, dy
