@@ -72,7 +72,7 @@ class LevelEditor < Scene
     @level_num = 1 if @level_num < 1
     @selected_blocks = []
     load_level
-  end 
+  end
 
   def edit_level_input
     shift = args.nokia.keyboard.shift
@@ -104,52 +104,44 @@ class LevelEditor < Scene
 
     args.labels << {x: 10, y: 70, text: "blocks = #{block_collection}"}.merge(r:255, g:255, b:255)
 
+    mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
+
+    if args.inputs.mouse.button_left
+      if not shift
+        @selected_blocks = []
+      end
+      block = find_block block_collection, mouse_pos
+      @selected_blocks << block if block and !@selected_blocks.include? block
+    end
+
     if args.inputs.mouse.button_right
-      mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
-      case @block_type 
-      when :holes
-        @level.holes << mouse_pos.merge(w:10, h:1, r:199, g:240, b:216)
+      block = find_block block_collection, mouse_pos
+      if !block
+        case @block_type 
+        when :fire
+          @level.fires << mouse_pos.merge(w:4, h:4, path: 'sprites/small_fire0.png')
+        when :spike
+          @level.spikes << mouse_pos.merge(w:4, h:4, path: 'sprites/spike.png')
+        when :holes
+          @level.holes << mouse_pos.merge(w:1, h:1, r:199, g:240, b:216)
+        else
+          @level.blocks << mouse_pos.merge(w:1, h:1)
+        end
       end
     end
 
-    if mouse_inside_level_area?
-      mouse_pos = {x: args.nokia.mouse.x, y: args.nokia.mouse.y}
-
-      if args.inputs.mouse.button_left
-        if not shift
-          @selected_blocks = []
-        end
-        block = find_block block_collection, mouse_pos
-        @selected_blocks << block if block and !@selected_blocks.include? block
-      end
-
-      if args.inputs.mouse.button_right
-        block = find_block block_collection, mouse_pos
-        if !block
-          case @block_type 
-          when :fire
-            @level.fires << mouse_pos.merge(w:4, h:4, path: 'sprites/small_fire0.png')
-          when :spike
-            @level.spikes << mouse_pos.merge(w:4, h:4, path: 'sprites/spike.png')
-          else
-            @level.blocks << mouse_pos.merge(w:1, h:1)
-          end
-        end
-      end
-
-      obj = nil
-      obj = :player if args.inputs.keyboard.p
-      obj = :goal if args.inputs.keyboard.g
-      if obj
-        if shift
-          @level[obj] = {}
-        else
-          sprites = {
-                      player: { w: 8, h: 8, path: 'sprites/player0.png' },
-                      goal: { w: 8, h: 8, path: 'sprites/exit0.png' },
-                    }
-          @level[obj] = sprites[obj].merge(x: mouse_pos.x, y: mouse_pos.y)
-        end
+    obj = nil
+    obj = :player if args.inputs.keyboard.p
+    obj = :goal if args.inputs.keyboard.g
+    if obj
+      if shift
+        @level[obj] = {}
+      else
+        sprites = {
+                    player: { w: 8, h: 8, path: 'sprites/player0.png' },
+                    goal: { w: 8, h: 8, path: 'sprites/exit0.png' },
+                  }
+        @level[obj] = sprites[obj].merge(x: mouse_pos.x, y: mouse_pos.y)
       end
     end
 
@@ -191,16 +183,30 @@ class LevelEditor < Scene
   end
 
   def change_blocks_size dx, dy
-    return if @block_type != :block
-    @selected_blocks = @selected_blocks.map do |b|
-      b.merge(w: (b.w+dx).clamp(1,$level_box.w - 2), h: (b.h+dy).clamp(1,$level_box.h - 2))
+    case @block_type
+    when :block
+      @selected_blocks = @selected_blocks.map do |b|
+        b.merge(w: (b.w+dx).clamp(1,$level_box.w - b.x - 2),
+                h: (b.h+dy).clamp(1,$level_box.h - b.y - 1))
+      end
+    when :holes
+      @selected_blocks = @selected_blocks.map do |b|
+        b.merge(w: (b.w+dx).clamp(1,$level_box.w - b.x - 2))
+      end
     end
   end
 
   def move_blocks dx, dy
-    @selected_blocks = @selected_blocks.map do |b|
-      b.merge(x: (b.x+dx).clamp($level_box.x + 1, $level_box.x + 1 +  $level_box.w - 2 - b.w),
-              y: (b.y+dy).clamp($level_box.y + 1, $level_box.y + 1 + $level_box.h - 2 - b.h))
+    if @block_type != :holes
+      @selected_blocks = @selected_blocks.map do |b|
+        b.merge(x: (b.x+dx).clamp($level_box.x + 1, $level_box.x + 1 +  $level_box.w - 2 - b.w),
+                y: (b.y+dy).clamp($level_box.y + 1, $level_box.y + 1 + $level_box.h - 2 - b.h))
+      end
+    else
+      @selected_blocks = @selected_blocks.map do |b|
+        b.merge(x: (b.x+dx).clamp($level_box.x + 1, $level_box.x + 1 +  $level_box.w - 2 - b.w),
+                y: (b.y+dy).clamp($level_box.y, $level_box.y + 1 + $level_box.h - 2 - b.h))
+      end
     end
   end
 
