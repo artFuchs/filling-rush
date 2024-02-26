@@ -226,7 +226,6 @@ class Game < Scene
 
     if @next_scene && @next_scene.class.name == "Title" || @next_scene.class.name == "EndScene"
       @over = true
-      p "over"
     else
       # change level
       @level_num += 1
