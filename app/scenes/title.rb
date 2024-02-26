@@ -13,20 +13,24 @@ class Title < Scene
 
   def render
 
+    @title_x ||= -84
+
     args.nokia.sprites << {
-      x:0, y: 0, w:84, h: 48, path: "sprites/intro/frame0047.png"
+      x:@title_x + 84, y: 0, w:84, h: 48, path: "sprites/intro/frame0047.png"
     }
 
     args.nokia.sprites << {
-      x:0, y: 0, w:84, h: 48, path: "sprites/title.png"
+      x:@title_x, y: 0, w:84, h: 48, path: "sprites/title.png"
     }
 
 
     if ((args.state.tick_count/30)%3) > 1
       args.nokia.sprites << {
-        x: 1, y: 1, w: 50, h: 10, path: "sprites/press_enter.png"
+        x: @title_x + 1, y: 1, w: 50, h: 10, path: "sprites/press_enter.png"
       }
     end
+
+    @title_x += 1 if @title_x < 0
   end
 
   def input

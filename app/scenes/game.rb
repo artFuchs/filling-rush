@@ -222,7 +222,12 @@ class Game < Scene
 
     @in_transition = false if @transition_time <= 0
 
-    if @transition_time == (TRANSITION_TIME/2)
+    return if @transition_time != (TRANSITION_TIME/2) + 10
+
+    if @next_scene && @next_scene.class.name == "Title" || @next_scene.class.name == "EndScene"
+      @over = true
+      p "over"
+    else
       # change level
       @level_num += 1
       load_level
@@ -269,7 +274,8 @@ class Game < Scene
 
   def return_title
     @next_scene = Title.new
-    @over = true
+    @transition_time = TRANSITION_TIME
+    @in_transition = true
   end
 
 
