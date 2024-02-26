@@ -148,6 +148,7 @@ class Game < Scene
     cols = collide? @level.player, @level.fires
     if cols.size > 0
       if @level.player.state == :frozen || @level.player.state == :melting
+        play_sound args, :fire
         unfreeze cols
       else
         reset_level

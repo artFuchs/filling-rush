@@ -23,6 +23,18 @@ class Intro < Scene
         path = "sprites/intro/frame#{frame_str}.png"
         args.nokia.sprites << {x: 0, y: 0, w: 84, h: 48, path: path}
 
+        if c_frame == 5
+            play_sound args, :intro0005
+        end
+
+        if c_frame == 22
+            play_sound args, :evolve
+        end
+
+        if c_frame == 47
+            play_sound args, :intro0047
+        end
+
         @over = true if c_frame > 60
     end
 
