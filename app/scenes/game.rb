@@ -15,6 +15,7 @@ class Game < Scene
     @time = 0
     @deaths = 0
     @in_transition = false
+    @idle = false
     load_level
   end
 
@@ -114,6 +115,14 @@ class Game < Scene
         }
     end
 
+    if @idle > 60*4
+      if (args.state.tick_count/30)%3 > 1
+        args.nokia.primitives << {
+          x: 28, y: 32, w: 31, h: 16, path: "sprites/tutorials/6.png"
+      }.sprite!
+      end
+    end
+
     if @pause      
       args.nokia.primitives << {
         x: 0, y: 0, w: 84, h: 48, path: "sprites/pause.png"
@@ -149,9 +158,14 @@ class Game < Scene
       display_goal
     end
 
-
     if player_has_fallen? @level.player
       reset_level
+    end
+
+    if @level.player.state == :frozen
+      @idle += 1
+    else
+      @idle = 0
     end
     
     reset_level if (collide? @level.player, @level.spikes).size > 0
