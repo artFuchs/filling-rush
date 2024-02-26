@@ -3,7 +3,6 @@ class Title < Scene
   @@borders = {x: 2, y: 2, w: 80, h: 44}
 
   def initialize
-    @blocks = []
     @next_scene = Game.new()
   end
 
@@ -15,17 +14,19 @@ class Title < Scene
   def render
 
     args.nokia.sprites << {
+      x:0, y: 0, w:84, h: 48, path: "sprites/intro/frame0047.png"
+    }
+
+    args.nokia.sprites << {
       x:0, y: 0, w:84, h: 48, path: "sprites/title.png"
     }
 
 
     if ((args.state.tick_count/30)%3) > 1
       args.nokia.sprites << {
-        x: 1, y: 1, w: 48, h: 8, path: "sprites/press_enter.png"
+        x: 1, y: 1, w: 50, h: 10, path: "sprites/press_enter.png"
       }
     end
-
-    args.nokia.solids << @blocks
   end
 
   def input

@@ -1,5 +1,6 @@
 require 'app/nokia.rb'
 require 'app/scenes/scene.rb'
+require 'app/scenes/intro.rb'
 require 'app/scenes/title.rb'
 require 'app/scenes/end_scene.rb'
 require 'app/scenes/game.rb'
@@ -24,5 +25,5 @@ def tick args
 end
 
 def set_scene
-  $scene = Title.new
+  $scene = Intro.new()
 end
