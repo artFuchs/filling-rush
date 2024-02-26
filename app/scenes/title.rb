@@ -40,7 +40,7 @@ class Title < Scene
       @over = true
     end
 
-    if  inputs.keyboard.key_down.escape
+    if inputs.keyboard.key_down.escape && !gtk.production
        @next_scene = LevelEditor.new()
        @over = true
     end

@@ -27,15 +27,17 @@ end
 
 def set_player_state level
 
-  args.labels << {x: 10, y: 20,
-  text: "player.state = #{@level.player.state}",
-  r: 255, b:255, g:255}
-  args.labels << {x: 10, y: 40,
-  text: "player.vel_v = #{@level.player.vel_v}",
-  r: 255, b:255, g:255}
-  args.labels << {x: 10, y: 60,
-  text: "player.vel_h = #{@level.player.vel_h}",
-  r: 255, b:255, g:255}
+  if !gtk.production
+    args.labels << {x: 10, y: 20,
+    text: "player.state = #{@level.player.state}",
+    r: 255, b:255, g:255}
+    args.labels << {x: 10, y: 40,
+    text: "player.vel_v = #{@level.player.vel_v}",
+    r: 255, b:255, g:255}
+    args.labels << {x: 10, y: 60,
+    text: "player.vel_h = #{@level.player.vel_h}",
+    r: 255, b:255, g:255}
+  end
 
   if level.player.state == :using_power  
     level.player.time_to_freeze ||= TIME_TO_FREEZE
