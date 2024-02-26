@@ -15,6 +15,7 @@ class Game < Scene
     @time = 0
     @deaths = 0
     @in_transition = false
+    @idle = false
     load_level
   end
 
@@ -74,22 +75,6 @@ class Game < Scene
     minutes = 99 if minutes > 99
     time_str = "%02d:%02d"%[minutes,seconds]
 
-
-    if @pause      
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: 42,
-                                       y: 24, text: "PAUSED",
-                                       alignment_enum: 1)
-  
-      args.nokia.labels << args.nokia
-                                .default_label
-                                .merge(x: 42,
-                                        y: 30, text: "LEVEL #{@level_num}",
-                                        alignment_enum: 1)
-
-    end
-
     args.nokia.primitives << $level_box.border!
     args.nokia.primitives << @level.holes.map{|h| h.sprite!}
     args.nokia.sprites << @level.backgrounds if @level.backgrounds
@@ -129,6 +114,25 @@ class Game < Scene
         path: :block
         }
     end
+
+    if @idle > 60*4
+      if (args.state.tick_count/30)%3 > 1
+        args.nokia.primitives << {
+          x: 28, y: 32, w: 31, h: 16, path: "sprites/tutorials/6.png"
+      }.sprite!
+      end
+    end
+
+    if @pause      
+      args.nokia.primitives << {
+        x: 0, y: 0, w: 84, h: 48, path: "sprites/pause.png"
+      }.sprite!
+
+      args.nokia.primitives << {
+      x: 65, y: 6, w: 5, h: 7, path: "sprites/numeros/#{@level_num}.png"
+      }.sprite!
+
+    end
   end
 
 
@@ -154,9 +158,14 @@ class Game < Scene
       display_goal
     end
 
-
     if player_has_fallen? @level.player
       reset_level
+    end
+
+    if @level.player.state == :frozen
+      @idle += 1
+    else
+      @idle = 0
     end
     
     reset_level if (collide? @level.player, @level.spikes).size > 0
