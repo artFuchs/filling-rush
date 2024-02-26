@@ -11,7 +11,7 @@ SOUND_FILES = {
 
 
 def play_sound args, sound
-  args.audio["sound"] ||= {
+  args.audio["sound"] = {
     input: "sounds/"+SOUND_FILES[sound],
     looping: false
   }
