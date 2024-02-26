@@ -128,9 +128,18 @@ class Game < Scene
         x: 0, y: 0, w: 84, h: 48, path: "sprites/pause.png"
       }.sprite!
 
-      args.nokia.primitives << {
-      x: 65, y: 6, w: 5, h: 7, path: "sprites/numeros/#{@level_num}.png"
-      }.sprite!
+      if @level_num < 10
+        args.nokia.primitives << {
+        x: 65, y: 6, w: 5, h: 7, path: "sprites/numeros/#{@level_num}.png"
+        }.sprite!
+      else
+        args.nokia.primitives << {
+        x: 65, y: 6, w: 5, h: 7, path: "sprites/numeros/#{@level_num.to_s[0]}.png"
+        }.sprite!
+        args.nokia.primitives << {
+        x: 69, y: 6, w: 5, h: 7, path: "sprites/numeros/#{(@level_num.to_s[1])}.png"
+        }.sprite!
+      end
 
     end
   end
@@ -148,6 +157,7 @@ class Game < Scene
     cols = collide? @level.player, @level.fires
     if cols.size > 0
       if @level.player.state == :frozen || @level.player.state == :melting
+        play_sound args, :fire
         unfreeze cols
       else
         reset_level

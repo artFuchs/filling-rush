@@ -89,6 +89,7 @@ def player_inputs args, player
   end
 
   if args.nokia.keyboard.key_down.space
+    play_sound args, :evolve
     player.state = :using_power
     player.used_power = args.state.tick_count
     player.x -= 2
