@@ -48,7 +48,6 @@ def move_restricting_to_borders obj, borders, holes
   min_x = borders.x+1
   max_x = borders.x+borders.w-1
   min_y = borders.y+1
-  max_y = borders.y+borders.h-1
 
   if dx < min_x
     dx = min_x
@@ -60,9 +59,6 @@ def move_restricting_to_borders obj, borders, holes
 
   if dy < min_y
     dy = min_y
-    vel_v = 0
-  elsif dy+obj.h > max_y
-    dy = max_y-obj.h
     vel_v = 0
   end
 
@@ -84,7 +80,7 @@ def move_checking_collisions obj, future, colliders
       # if obj is falling on top of collider, stop
       if vel_v < 0 && obj.y >= col.y+col.h-1
         vel_v = 0
-          dy = col.y+col.h
+        dy = col.y+col.h
       elsif vel_v > 0 && obj.y <= col.y-obj.h+1
         vel_v = 0
         dy = col.y-obj.h
