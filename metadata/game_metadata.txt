@@ -1,8 +1,8 @@
 devid= ninus-hideon
 devtitle= Ninus Hideon
-gameid= filling-rush
-gametitle= Filling Rush
-version= 0.1
+gameid= freeze-yourself
+gametitle= So, you can Freeze Yourself! Now what?
+version= 0.2
 icon = metadata/icon.png
 
 # Uncomment the entry below to bytecode compile your Ruby code (Pro License Only)
