@@ -2,11 +2,11 @@ require 'app/game/physics.rb'
 require 'app/game/particles.rb'
 require 'app/game/sound.rb'
 require 'app/game/player.rb'
+require 'app/game/render.rb'
 
 class Game < Scene
   attr_gtk
 
-  PORTAL_TIME = 30
 
   def initialize(level_num = 1)
     @level_num = level_num
@@ -69,100 +69,13 @@ class Game < Scene
     player_inputs args, @level.player
   end
 
-  def render
-    minutes = (@time/(3600)).floor
-    seconds = (@time/(60)).floor % 60
-    minutes = 99 if minutes > 99
-    time_str = "%02d:%02d"%[minutes,seconds]
-
-    args.nokia.primitives << $level_box.border!
-    args.nokia.primitives << @level.holes.map{|h| h.sprite!}
-    args.nokia.sprites << @level.backgrounds if @level.backgrounds
-    args.nokia.solids << @level.blocks
-    args.nokia.sprites << @level.spikes
-
-
-    if @time - @level.portal.time < PORTAL_TIME
-      frame = (@time - @level.portal.time).idiv(5)
-      args.nokia.sprites << @level.portal.merge(path: "sprites/portal#{frame}.png")
-    end
-
-
-    goal_frame = (args.state.tick_count/30).floor%2
-    if @level.goal
-      args.nokia.sprites << @level.goal.merge(path: "sprites/exit#{goal_frame}.png")
-    end
-
-    set_player_sprite
-    args.nokia.primitives << @level.player.sprite!
-
-    fire_frame = args.state.tick_count.idiv(15)%5
-    args.nokia.sprites << @level.fire.merge(path: "sprites/fire#{fire_frame}.png")
-
-    args.nokia.sprites << @level.fires.map do |f| 
-      f.merge(path: "sprites/small_fire#{fire_frame}.png")
-    end
-
-    if @level.particles
-      args.nokia.solids << @level.particles
-    end
-
-    if @in_transition
-      args.nokia.sprites << {
-        x: 168*(TRANSITION_TIME-@transition_time)/TRANSITION_TIME*2 - 84,
-        y: 0, h: 48, w: 84,
-        path: :block
-        }
-    end
-
-    if @idle > 60*4
-      if (args.state.tick_count/30)%3 > 1
-        args.nokia.primitives << {
-          x: 28, y: 32, w: 31, h: 16, path: "sprites/tutorials/6.png"
-      }.sprite!
-      end
-    end
-
-    if @pause      
-      args.nokia.primitives << {
-        x: 0, y: 0, w: 84, h: 48, path: "sprites/pause.png"
-      }.sprite!
-
-      if @level_num < 10
-        args.nokia.primitives << {
-        x: 65, y: 6, w: 5, h: 7, path: "sprites/numeros/#{@level_num}.png"
-        }.sprite!
-      else
-        args.nokia.primitives << {
-        x: 65, y: 6, w: 5, h: 7, path: "sprites/numeros/#{@level_num.to_s[0]}.png"
-        }.sprite!
-        args.nokia.primitives << {
-        x: 69, y: 6, w: 5, h: 7, path: "sprites/numeros/#{(@level_num.to_s[1])}.png"
-        }.sprite!
-      end
-
-    end
-  end
-
-
-
   def update
     set_player_state @level
 
     @level.player = apply_gravity @level.player
     @level.player = move_object @level.player, $level_box, @level.holes, @level.blocks
     
-    break_weak_blocks
-
-    cols = collide? @level.player, @level.fires
-    if cols.size > 0
-      if @level.player.state == :frozen || @level.player.state == :melting
-        play_sound args, :fire
-        unfreeze cols
-      else
-        reset_level
-      end
-    end
+    break_weak_blocks  
 
     if @level.fires.size == 0
       display_goal
@@ -178,9 +91,38 @@ class Game < Scene
       @idle = 0
     end
     
-    reset_level if (collide? @level.player, @level.spikes).size > 0
+    process_collisions()
+  end
 
-    next_level if (collide? @level.player, [@level.goal]).size > 0
+  def process_collisions
+
+    player = @level.player
+    hurtbox = player.hurtbox 
+    hitbox = player.hitbox
+
+
+    if hitbox
+      player_hitbox = hitbox.merge(
+        x: hitbox.x + player.x,
+        y: hitbox.y + player.y
+      )
+
+      cols = collide? player_hitbox, @level.fires
+      if cols.size > 0
+        play_sound args, :fire
+        unfreeze cols
+      end
+    end
+
+    return if !hurtbox
+
+    player_hurtbox = hurtbox.merge(
+      x: hurtbox.x + player.x,
+      y: hurtbox.y + player.y
+    )
+
+    reset_level if (collide? player_hurtbox, @level.spikes.map{|s| s.hitbox} + @level.fires).size > 0
+    next_level if (collide? player_hurtbox, [@level.goal]).size > 0
   end
 
   def unfreeze fires
@@ -224,7 +166,7 @@ class Game < Scene
   end
 
 
-  TRANSITION_TIME = 60
+  
   def update_transition
     return if !@in_transition
 
@@ -264,9 +206,13 @@ class Game < Scene
       @level.blocks ||= []
       @level.fires ||= []
       @level.spikes ||= []
+      @level.spikes = @level.spikes.map {|s| s.merge( hitbox: {x: s.x + 1, y: s.y + 1, w: s.w - 2, h: s.h - 2})}
       @level.holes ||= []
       @level.particles = particles
+      @level.player = default_player.merge(@level.player)
       player = @level.player
+      p player
+      p @level.fires
       @level.portal = {x: player.x - 2, y: player.y - 2, w: 12, h: 12, time: @time}
       if @level.goal
         @level.goal = nil

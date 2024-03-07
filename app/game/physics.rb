@@ -23,6 +23,7 @@ def move_object obj, borders, holes, colliders
 end
 
 def apply_inertia obj
+  return if !obj.vel_h
   if obj.vel_h.abs < 0.05
     obj.vel_h = 0
   else  

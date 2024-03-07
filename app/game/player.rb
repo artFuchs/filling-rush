@@ -1,5 +1,3 @@
-
-
 # possible states
 # ground
 # air
@@ -17,9 +15,42 @@ def default_player
     h: 8,
     state: :ground,
     can_double_jump: false,
-    powers: {}
+    powers: {},
+    hurtbox: player_hurtbox[:default],
   }
 end
+
+def player_hurtbox
+  { :default => {x: 1, y: 0, w: 7, h: 6},
+    "player1.png" => {x: 1, y: 1, w: 7, h: 6},
+    "player3.png" => {x: 1, y: 1, w: 7, h: 6},
+    "player_jumping0.png" => {x: 1, y: 1, w: 7, h: 7},
+    "player_jumping1.png" => {x: 1, y: 1, w: 7, h: 7},
+    "player_jumping2.png" => {x: 1, y: 1, w: 7, h: 7},
+    "player_jumping3.png" => {x: 1, y: 1, w: 7, h: 7},
+    "player_falling.png" => {x: 1, y: 0, w: 7, h: 7},
+    "player_freezing0.png" => {x: 2, y: 2, w: 8, h: 9},
+    "player_freezing1.png" => {x: 3, y: 2, w: 6, h: 9},
+    "player_freezing2.png" => {x: 2, y: 2, w: 8, h: 9},
+    "player_freezing3.png" => {x: 2, y: 2, w: 8, h: 9},
+    "player_frozen.png" => {x: 2, y: 2, w: 8, h: 9},
+    "player_melting0.png" => {x: 2, y: 2, w: 8, h: 9},
+    "player_melting1.png" => {x: 2, y: 2, w: 8, h: 9},
+    "player_melting2.png" => {x: 2, y: 2, w: 8, h: 9},
+    "player_melting3.png" => {x: 2, y: 1, w: 8, h: 9},
+  }
+end
+
+def player_hitbox
+  { 
+    "player_frozen.png" => {x: 0, y: 0, w: 12, h: 12},
+    "player_melting0.png" => {x: 0, y: 0, w: 12, h: 8},
+    "player_melting1.png" => {x: 0, y: 0, w: 12, h: 6},
+    "player_melting2.png" => {x: 0, y: 0, w: 12, h: 5},
+    "player_melting3.png" => {x: 0, y: 0, w: 12, h: 2},
+  }
+end
+
 
 def player_has_fallen? player
   return level.player.y+level.player.h+1 < 0
@@ -161,4 +192,15 @@ def set_player_sprite
     frame = (TIME_TO_MELT - player.time_to_melt).idiv(15);
     player.path = "sprites/player_melting#{frame}.png"
   end
+
+  path = player.path.split('/')[1]
+  hurtbox = player_hurtbox[path]
+  hurtbox ||= player_hurtbox[:default]
+  hitbox = player_hitbox[path]
+  if player.flip_horizontally
+    hitbox.x = player.w - hitbox.x - hitbox.w if hitbox
+    hurtbox.x = player.w - hurtbox.x - hurtbox.w
+  end
+  player.hitbox = hitbox
+  player.hurtbox = hurtbox
 end

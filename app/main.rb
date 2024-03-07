@@ -21,6 +21,14 @@ def tick args
     set_scene
   end
 
+
+  if args.inputs.keyboard.key_held.minus # if minus key is held
+    args.gtk.slowmo!(3) # Slow motion
+  end
+  if args.inputs.keyboard.key_down.equal
+    args.state.render_debug_details ||= false
+    args.state.render_debug_details = ! args.state.render_debug_details 
+  end
   #args.outputs.debug << args.gtk.framerate_diagnostics_primitives
 end
 
