@@ -1,7 +1,6 @@
 class EndScene < Scene
 
-  def initialize(deaths)
-    @deaths = deaths
+  def initialize
     @borders = {x: 2, y: 2, w: 80, h: 44}
     @time = 0
   end
@@ -21,7 +20,6 @@ class EndScene < Scene
 
   def input
     @over = true if inputs.keyboard.key_down.enter
-    @deaths = 0 if @deaths < 0
   end
 
   def render

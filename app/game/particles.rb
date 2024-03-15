@@ -16,6 +16,7 @@ def create_explosion point
 end
 
 def move_particles particles
+  return if !particles
   particles.map do |p|
     move_particle p
   end.reject do |p|

@@ -13,7 +13,6 @@ class Game < Scene
     @pause = false
     @next_scene = nil
     @time = 0
-    @deaths = 0
     @in_transition = false
     @idle = false
     load_level
@@ -25,18 +24,10 @@ class Game < Scene
 
   def tick
     return if @over
-    defaults
-    if !@in_transition
-      input
-      update if !@pause
-    else 
-      update_transition
-    end
-    if @level.particles
-      @level.particles = move_particles @level.particles
-    end
-
-    render
+    defaults()
+    input()
+    update() if !@pause
+    render()
     @time += 1 if !@pause
   end
 
@@ -62,6 +53,8 @@ class Game < Scene
       @over = true
     end
 
+    return if @in_transition
+
     reset_level if args.nokia.keyboard.key_down.r or args.nokia.keyboard.key_down.backspace
 
     return if @pause
@@ -70,6 +63,13 @@ class Game < Scene
   end
 
   def update
+    return if @pause
+
+    if @in_transition
+      update_transition()
+      return
+    end
+    
     set_player_state @level
 
     @level.player = apply_gravity @level.player
@@ -92,6 +92,7 @@ class Game < Scene
     end
     
     process_collisions()
+    @level.particles = move_particles @level.particles
   end
 
   def process_collisions
@@ -152,7 +153,7 @@ class Game < Scene
       cols.include? b
     end
   end
-  
+
   def next_level
     # create explosion effect
     g = @level.goal
@@ -165,8 +166,6 @@ class Game < Scene
     @transition_time = TRANSITION_TIME
   end
 
-
-  
   def update_transition
     return if !@in_transition
 
@@ -191,13 +190,12 @@ class Game < Scene
     point = { x: p.x + p.w/2,
               y: p.y + p.h/2 }
     @level.particles = create_explosion point
-    @deaths += 1
     play_sound args, :portal
-    load_level true
+    load_level
     @pause = false
   end
 
-  def load_level reset=false
+  def load_level
     parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
     if parsed_level
       particles = [] 
@@ -223,7 +221,7 @@ class Game < Scene
   end
 
   def end_game
-    @next_scene = EndScene.new(@deaths)
+    @next_scene = EndScene.new()
     @over = true
   end
 
