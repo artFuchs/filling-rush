@@ -140,6 +140,7 @@ def player_inputs args, player
     apply_jump args, player
   end
 
+  player.vel_v ||= 0
   if player.vel_v < 0
     if player.state == :air
       if args.nokia.keyboard.up || args.nokia.keyboard.w
@@ -149,7 +150,7 @@ def player_inputs args, player
   end
 
   if player.state == :gliding
-    player.vel_v = -0.3
+    player.vel_v = -0.2
     if (!args.nokia.keyboard.up && !args.nokia.keyboard.w)
       player.state = :air
       player.vel_v = -1

@@ -159,7 +159,6 @@ class Game < Scene
     g = @level.goal
     point = { x: g.x + g.w/2,
               y: g.y + g.h/2 }
-    @level.particles = create_explosion point
     play_sound args, :portal
 
     @in_transition = true
