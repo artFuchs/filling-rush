@@ -111,7 +111,9 @@ def set_player_state level
     level.player.state = :ground
     level.player.can_double_jump = true
   else
-    level.player.state = :air
+    if level.player.state != :gliding
+      level.player.state = :air
+    end
   end
 end
 
@@ -136,6 +138,22 @@ def player_inputs args, player
   player.flip_horizontally = true if player.vel_h < 0
   if (args.nokia.keyboard.key_down.up || args.nokia.keyboard.key_down.w)
     apply_jump args, player
+  end
+
+  if player.vel_v < 0
+    if player.state == :air
+      if args.nokia.keyboard.up || args.nokia.keyboard.w
+        player.state = :gliding
+      end
+    end
+  end
+
+  if player.state == :gliding
+    player.vel_v = -0.3
+    if (!args.nokia.keyboard.up && !args.nokia.keyboard.w)
+      player.state = :air
+      player.vel_v = -1
+    end
   end
 end
 
