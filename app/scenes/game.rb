@@ -7,14 +7,13 @@ require 'app/game/render.rb'
 class Game < Scene
   attr_gtk
 
-
   def initialize(level_num = 1)
     @level_num = level_num
-    @pause = false
     @next_scene = nil
-    @time = 0
     @in_transition = false
+    @pause = false
     @idle = false
+    @time = 0
     load_level
   end
 
@@ -39,11 +38,9 @@ class Game < Scene
     args.outputs[:block] << {
       x: 0, y: 0, w: 84, h: 48, r: 64, g: 82, b: 61
     }.solid!
-
   end
 
   def input
-
     @pause = !@pause if args.nokia.keyboard.key_down.enter
 
     return_title if args.nokia.keyboard.key_down.escape
@@ -59,7 +56,8 @@ class Game < Scene
 
     return if @pause
     return if (@time - @level.portal.time) < PORTAL_TIME
-    player_inputs args, @level.player
+
+    @level.player.inputs(args)
   end
 
   def update
@@ -70,10 +68,10 @@ class Game < Scene
       return
     end
     
-    set_player_state @level
+    @level.player.update_state(@level)
 
-    @level.player = apply_gravity @level.player
-    @level.player = move_object @level.player, $level_box, @level.holes, @level.blocks
+    @level.player.apply_gravity()
+    #move_object(@level.player, $level_box, @level.holes, @level.blocks)
     
     break_weak_blocks  
 
@@ -81,7 +79,7 @@ class Game < Scene
       display_goal
     end
 
-    if player_has_fallen? @level.player
+    if @level.player.has_fallen?
       reset_level
     end
 
@@ -96,16 +94,14 @@ class Game < Scene
   end
 
   def process_collisions
-
-    player = @level.player
-    hurtbox = player.hurtbox 
-    hitbox = player.hitbox
+    hurtbox = @level.player.hurtbox 
+    hitbox = @level.player.hitbox
 
 
     if hitbox
       player_hitbox = hitbox.merge(
-        x: hitbox.x + player.x,
-        y: hitbox.y + player.y
+        x: hitbox.x + @level.player.bbox.x,
+        y: hitbox.y + @level.player.bbox.y
       )
 
       cols = collide? player_hitbox, @level.fires
@@ -118,8 +114,8 @@ class Game < Scene
     return if !hurtbox
 
     player_hurtbox = hurtbox.merge(
-      x: hurtbox.x + player.x,
-      y: hurtbox.y + player.y
+      x: hurtbox.x + @level.player.bbox.x,
+      y: hurtbox.y + @level.player.bbox.y
     )
 
     reset_level if (collide? player_hurtbox, @level.spikes.map{|s| s.hitbox} + @level.fires).size > 0
@@ -144,7 +140,7 @@ class Game < Scene
   def break_weak_blocks
     return if ![:frozen,:melting].include? @level.player.state
 
-    below = @level.player.merge(y: @level.player.y - 1)
+    below = @level.player.bbox.merge(y: @level.player.bbox.y - 1)
     weak_blocks = @level.blocks.find_all do |b|
       b.h == 1
     end
@@ -185,9 +181,8 @@ class Game < Scene
   end
 
   def reset_level
-    p = @level.player
-    point = { x: p.x + p.w/2,
-              y: p.y + p.h/2 }
+    point = { x: @level.player.bbox.x + @level.player.bbox.w/2,
+              y: @level.player.bbox.y + @level.player.bbox.h/2 }
     @level.particles = create_explosion point
     play_sound args, :portal
     load_level
@@ -196,6 +191,7 @@ class Game < Scene
 
   def load_level
     parsed_level = $gtk.deserialize_state("levels/level#{@level_num}.txt")
+
     if parsed_level
       particles = [] 
       particles = @level.particles if @level
@@ -203,14 +199,16 @@ class Game < Scene
       @level.blocks ||= []
       @level.fires ||= []
       @level.spikes ||= []
-      @level.spikes = @level.spikes.map {|s| s.merge( hitbox: {x: s.x + 1, y: s.y + 1, w: s.w - 2, h: s.h - 2})}
+      @level.spikes = @level.spikes.map {
+        |s| s.merge( hitbox: {x: s.x + 1, y: s.y + 1, w: s.w - 2, h: s.h - 2})}
       @level.holes ||= []
       @level.particles = particles
-      @level.player = default_player.merge(@level.player)
-      player = @level.player
-      p player
-      p @level.fires
-      @level.portal = {x: player.x - 2, y: player.y - 2, w: 12, h: 12, time: @time}
+      @level.player = IcePlayer.new()
+      @level.portal = {
+        x: @level.player.bbox.x - 2,
+        y: @level.player.bbox.y - 2,
+        w: 12, h: 12, time: @time}
+      
       if @level.goal
         @level.goal = nil
       end
@@ -229,7 +227,4 @@ class Game < Scene
     @transition_time = TRANSITION_TIME
     @in_transition = true
   end
-
-
-
 end
