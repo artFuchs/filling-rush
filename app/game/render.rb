@@ -63,9 +63,9 @@ def render_level()
 end
 
 def render_player
-  set_player_sprite
   player = @level.player
-  args.nokia.primitives << player.sprite!
+  player.set_sprite args
+  args.nokia.primitives << player.bbox.sprite!
 
   return if !args.state.render_debug_details
   return if !player.hurtbox
@@ -73,8 +73,8 @@ def render_player
   boxes << player.hitbox.merge(r: 255, g: 120, b: 100) if player.hitbox
   outputs.borders << boxes.map do |h|
       h.merge(
-          x: NOKIA_X_OFFSET + (player.x + h.x)*NOKIA_ZOOM,
-          y: NOKIA_Y_OFFSET + (player.y + h.y)*NOKIA_ZOOM,
+          x: NOKIA_X_OFFSET + (player.bbox.x + h.x)*NOKIA_ZOOM,
+          y: NOKIA_Y_OFFSET + (player.bbox.y + h.y)*NOKIA_ZOOM,
           w: h.w*NOKIA_ZOOM,
           h: h.h*NOKIA_ZOOM
       )
