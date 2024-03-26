@@ -17,7 +17,7 @@ def tick args
       $scene = $scene.next_scene
     end
   else
-    $scene = Intro.new()
+    $scene = Intro.new
   end
 
   # Debugging: Slow motion (Hold minus key)

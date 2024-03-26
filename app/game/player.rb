@@ -1,17 +1,19 @@
 class Player
-  attr_gtk
-  attr_accessor :bbox, :velocity, :state
+  GRAVITY_STEP = -0.1
+  MAX_VELOCITY = 1
+
+  attr_accessor :bbox, :velocity, :state, :hurtbox, :hitbox, :hurtboxes
   
-  def initialize
+  def initialize args
     @bbox = {x: 0, y: 0, w: 8, h: 8}
     @velocity = {v: 0, h: 0}
     @state = :ground
     @can_double_jump = false
-    @hurtbox = parse_hash(args.gtk.parse_json_file('sprites/players/hurtboxes.json'))
-    @hitbox = parse_hash(args.gtk.parse_json_file('sprites/players/hitboxes.json'))
+    @hurtboxes = parse_hash(args.gtk.parse_json_file('sprites/players/hurtboxes.json'))[@type]
+    @hitboxes = parse_hash(args.gtk.parse_json_file('sprites/players/hitboxes.json'))[@type]
   end
 
-  def parse_hash(hash)
+  def parse_hash hash
     new_hash = {}
     hash.each do |key, value|
       new_key = key.to_sym
@@ -23,11 +25,11 @@ class Player
         new_hash[new_key] = value
       end
     end
-    new_hash[@type]
+    return new_hash
   end
 
-  def update_state level
-    debug()
+  def update_state args, level
+    debug args
 
     below = @bbox.merge(y: @bbox.y-1)
 
@@ -52,11 +54,11 @@ class Player
     end
   end
 
-  def inputs
+  def inputs args
     return if @state == :using_power
 
     if args.nokia.keyboard.key_down.space
-      play_sound(args, :evolve)
+      play_sound args, :evolve
       @used_power = args.state.tick_count
       @state = :using_power
       @bbox.w = 12
@@ -91,7 +93,7 @@ class Player
     end
   end
 
-  def set_sprite
+  def set_sprite args
     tick_count = args.state.tick_count
 
     case @state
@@ -112,7 +114,7 @@ class Player
       when :air
         @jump ||= {initial_frame: 0, time: tick_count}
         frame = @jump.initial_frame
-        frame += 1 if (tick_count > @jump.time + 4) 
+        frame += 1 if (tick_count > @jump.time + 4)
         if @velocity[:v] >= 0
           @path = get_sprite_path(:jumping, frame)
           @hurtbox = get_hurtbox(:jumping, frame)
@@ -129,7 +131,7 @@ class Player
     end
   end
 
-  def apply_jump
+  def apply_jump args
     case @state
     when :ground
       play_sound(args, :jump)
@@ -167,7 +169,7 @@ class Player
     return @bbox.y+@bbox.h+1 < 0
   end
 
-  def debug
+  def debug args
     if !args.gtk.production
       args.labels << {x: 10, y: 20,
         text: "player.state = #{@state}",
@@ -189,17 +191,15 @@ class IcePlayer < Player
   
   TIME_TO_MELT = 60
   TIME_TO_FREEZE = 60
-  GRAVITY_STEP = -0.1
-  MAX_VELOCITY = 1
 
   attr_accessor :time_to_melt, :time_to_freeze
 
-  def initialize
+  def initialize args
     @type = :ice
-    super
+    super args
   end
 
-  def update_state
+  def update_state args, level
     if @state == :using_power  
       @time_to_freeze ||= TIME_TO_FREEZE
       @time_to_freeze -= 1
@@ -221,16 +221,16 @@ class IcePlayer < Player
       return if @time_to_melt != nil;
     end
 
-    super
+    super args, level
   end
 
-  def inputs
+  def inputs args
     return if [:frozen, :melting].include? @state
-    super
+    super args
   end
 
-  def set_sprite
-    super
+  def set_sprite args
+    super args
 
     case @state
       when :using_power
