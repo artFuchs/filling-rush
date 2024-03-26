@@ -14,7 +14,6 @@ class Game < Scene
     @pause = false
     @idle = false
     @time = 0
-    load_level
   end
 
   def level
@@ -22,11 +21,15 @@ class Game < Scene
   end
 
   def tick
+    if !@level
+      load_level
+    end
+
     return if @over
-    defaults()
-    input()
-    update() if !@pause
-    render()
+    defaults
+    input
+    update if !@pause
+    render
     @time += 1 if !@pause
   end
 
@@ -68,9 +71,8 @@ class Game < Scene
       return
     end
     
-    @level.player.update_state(@level)
-
-    @level.player.apply_gravity()
+    @level.player.update_state(args, @level)
+    @level.player.apply_gravity
     #move_object(@level.player, $level_box, @level.holes, @level.blocks)
     
     break_weak_blocks  
@@ -200,10 +202,11 @@ class Game < Scene
       @level.fires ||= []
       @level.spikes ||= []
       @level.spikes = @level.spikes.map {
-        |s| s.merge( hitbox: {x: s.x + 1, y: s.y + 1, w: s.w - 2, h: s.h - 2})}
+        |s| s.merge(hitbox: {x: s.x + 1, y: s.y + 1, w: s.w - 2, h: s.h - 2})
+      }
       @level.holes ||= []
       @level.particles = particles
-      @level.player = IcePlayer.new()
+      @level.player = IcePlayer.new(args)
       @level.portal = {
         x: @level.player.bbox.x - 2,
         y: @level.player.bbox.y - 2,
