@@ -105,11 +105,11 @@ class Player
         @sprite.h = 8
         if @walking
           frame = (tick_count.idiv(10))%4 + 1
-          @path = get_sprite_path(:walking, frame)
-          @hurtbox = get_hurtbox(:walking, frame)
-          @hitbox = get_hitbox(:walking, frame)
+          @sprite[:path] = get_sprite_path(:walking, frame)
+          @hurtbox = get_hurtbox(:walking)
+          @hitbox = get_hitbox(:default)
         else
-          @path = get_sprite_path(:standing)
+          @sprite[:path] = get_sprite_path(:standing)
           @hurtbox = get_hurtbox(:standing)
           @hitbox = get_hitbox(:standing)
         end
@@ -119,11 +119,11 @@ class Player
         frame = @jump.initial_frame
         frame += 1 if (tick_count > @jump.time + 4)
         if @velocity[:v] >= 0
-          @path = get_sprite_path(:jumping, frame)
+          @sprite[:path] = get_sprite_path(:jumping, frame)
           @hurtbox = get_hurtbox(:jumping, frame)
           @hitbox = get_hitbox(:default)
         else
-          @path = get_sprite_path(:falling)
+          @sprite[:path] = get_sprite_path(:falling)
           @hurtbox = get_hurtbox(:falling)
           @hitbox = get_hitbox(:default)
         end
@@ -151,7 +151,6 @@ class Player
   end
 
   def apply_gravity
-    @velocity[:v] = 0 if !@velocity[:v]
     @velocity[:v] += GRAVITY_STEP
     @velocity[:v] = -MAX_VELOCITY if @velocity[:v] < -MAX_VELOCITY
   end
@@ -169,7 +168,7 @@ class Player
     @sprite[:dy] = @sprite[:y] + @velocity[:v]
 
     below = @sprite.merge(y: @sprite[:y]-1)
-    is_falling = (collide? below, holes).size > 0 || below[:y] < $level_box[:y]
+    is_falling = (collide?(below, holes)).size > 0 || below[:y] < $level_box[:y]
     if is_falling
       @sprite[:dx] = @sprite[:x]
       @sprite[:dy] = @sprite[:y]
@@ -195,11 +194,54 @@ class Player
   end
 
   def apply_collisions colliders
-    cols_x = collide?(self, colliders)
-    cols_y = collide?(self, colliders)
+    future = @sprite.merge(x: @sprite[:dx], y: @sprite[:dy])
+    cols_x = collide?(future, colliders)
+    cols_y = collide?(future, colliders)
     for col in cols_y
-      @sprite[:dy] = col[:y] if @velocity[:v] < 0
-      @velocity[:v] = 0
+      if col
+        if @velocity[:v] < 0 && @sprite[:y] >= col[:y]+col[:h]-1
+          @velocity[:dv] = 0
+          @sprite[:dy] = col[:y]+col[:h]
+        elsif @velocity[:v] > 0 && @sprite[:y] <= col[:y]-@sprite[:h]+1
+          @velocity[:dv] = 0
+          @sprite[:dy] = col[:y]-@sprite[:h]
+        end
+      end
+    end
+
+    for col in cols_x
+      if col
+        if @velocity[:h] < 0 && @sprite[:x] >= col[:x]+col[:w]-1
+          @velocity[:dh] = 0
+          @sprite[:dx] = col[:x]+col[:w]
+        elsif @velocity[:h] > 0 && @sprite[:x] <= col[:x]-@sprite[:w]+1
+          @velocity[:dh] = 0
+          @sprite[:dx] = col[:x]-@sprite[:w]
+        end
+      end
+    end
+  end
+
+  def apply_changes
+    @sprite[:x] = @sprite[:dx]
+    @sprite[:y] = @sprite[:dy]
+    @velocity[:h] = @velocity[:dh]
+    @velocity[:v] = @velocity[:dv]
+  end
+
+  def fix_clipping colliders
+    future = @sprite.merge(x: @sprite[:dx], y: @sprite[:dy])
+    cols = collide?(future, colliders)
+    if cols.size > 0
+      side = get_most_collided_side(future, colliders)
+      case side
+      when :top
+        obj = obj.merge(y: cols[0].y-obj.h)
+      when :left
+        obj = obj.merge(x: cols[0].x+cols[0].w)
+      when :right
+        obj = obj.merge(x: cols[0].x-obj.w)
+      end
     end
   end
 
@@ -284,19 +326,19 @@ class IcePlayer < Player
       when :using_power
         return if @time_to_freeze == nil
         frame = (TIME_TO_FREEZE - @time_to_freeze).idiv(15)
-        @path = get_sprite_path(:freezing, frame)
+        @sprite[:path] = get_sprite_path(:freezing, frame)
         @hurtbox = get_hurtbox(:freezing, frame)
         @hitbox = get_hitbox(:default)
       
       when :frozen
-        @path = get_sprite_path(:frozen)
+        @sprite[:path] = get_sprite_path(:frozen)
         @hurtbox = get_hurtbox(:frozen)
         @hitbox = get_hitbox(:frozen)
       
       when :melting
         return if @time_to_melt == nil
         frame = (TIME_TO_MELT - @time_to_melt).idiv(15);
-        @path = get_sprite_path(:melting, frame)
+        @sprite[:path] = get_sprite_path(:melting, frame)
         @hurtbox = get_hurtbox(:melting, frame)
         @hitbox = get_hitbox(:melting)
     end

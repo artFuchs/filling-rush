@@ -10,17 +10,18 @@ def apply_gravity obj
 end
 
 def move_object obj, borders, holes, colliders
-  return obj if obj.state == :using_power
+  return if obj.state == :using_power
   if obj.state == :frozen || obj.state == :melting
     obj.apply_inertia
   end
 
   obj.apply_movement borders, holes
-  move_checking_collisions(obj, future, colliders)
-  # if future.state != :ground
-  #   future = fix_clipping(future, colliders)
-  # end
-  return obj
+  obj.apply_collisions colliders
+  if obj.state != :ground
+    obj.fix_clipping colliders
+  end
+
+  obj.apply_changes()
 end
 
 def move_restricting_to_borders obj, borders, holes
@@ -135,7 +136,7 @@ def collide? obj, colliders
   colliders.find_all do |c|
     if c
       if (c.has_key? :x) && (c.has_key? :y) && (c.has_key? :w) && (c.has_key? :h)
-        obj.sprite.intersect_rect? c
+        obj.intersect_rect? c
       end
     end
   end

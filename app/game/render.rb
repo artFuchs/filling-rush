@@ -2,18 +2,16 @@ PORTAL_TIME = 30
 TRANSITION_TIME = 60
 
 def render
-  render_level()
-  
-  render_player()
+  render_level
+  render_player
 
-  # render particles
   if @level.particles
     args.nokia.solids << @level.particles
   end
 
-  render_reset_indication() if @idle > 60*4
-  render_transition()
-  render_pause()
+  render_reset_indication if @idle > 60*4
+  render_transition
+  render_pause
 end
 
 def render_level()
