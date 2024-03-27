@@ -1,7 +1,6 @@
 PORTAL_TIME = 30
 TRANSITION_TIME = 60
 
-
 def render
   render_level()
   
@@ -25,8 +24,6 @@ def render_level()
   args.nokia.solids << @level.blocks
   
   args.nokia.sprites << @level.spikes
-
-
 
   # render portal
   if @time - @level.portal.time < PORTAL_TIME
@@ -58,14 +55,12 @@ def render_level()
           h: h.h*NOKIA_ZOOM
       )
   end
-
-
 end
 
 def render_player
   player = @level.player
   player.set_sprite args
-  args.nokia.primitives << player.bbox.sprite!
+  args.nokia.primitives << player.sprite.sprite!
 
   return if !args.state.render_debug_details
   return if !player.hurtbox
@@ -73,14 +68,13 @@ def render_player
   boxes << player.hitbox.merge(r: 255, g: 120, b: 100) if player.hitbox
   outputs.borders << boxes.map do |h|
       h.merge(
-          x: NOKIA_X_OFFSET + (player.bbox.x + h.x)*NOKIA_ZOOM,
-          y: NOKIA_Y_OFFSET + (player.bbox.y + h.y)*NOKIA_ZOOM,
+          x: NOKIA_X_OFFSET + (player.sprite.x + h.x)*NOKIA_ZOOM,
+          y: NOKIA_Y_OFFSET + (player.sprite.y + h.y)*NOKIA_ZOOM,
           w: h.w*NOKIA_ZOOM,
           h: h.h*NOKIA_ZOOM
       )
   end
 end
-
 
 def render_reset_indication()
   if (args.state.tick_count/30)%3 > 1

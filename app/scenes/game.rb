@@ -60,7 +60,7 @@ class Game < Scene
     return if @pause
     return if (@time - @level.portal.time) < PORTAL_TIME
 
-    @level.player.inputs(args)
+    @level.player.inputs args
   end
 
   def update
@@ -73,9 +73,10 @@ class Game < Scene
     
     @level.player.update_state(args, @level)
     @level.player.apply_gravity
-    #move_object(@level.player, $level_box, @level.holes, @level.blocks)
     
-    break_weak_blocks  
+    move_object(@level.player, $level_box, @level.holes, @level.blocks)
+    
+    break_weak_blocks
 
     if @level.fires.size == 0
       display_goal
@@ -99,11 +100,10 @@ class Game < Scene
     hurtbox = @level.player.hurtbox 
     hitbox = @level.player.hitbox
 
-
     if hitbox
       player_hitbox = hitbox.merge(
-        x: hitbox.x + @level.player.bbox.x,
-        y: hitbox.y + @level.player.bbox.y
+        x: hitbox.x + @level.player.sprite.x,
+        y: hitbox.y + @level.player.sprite.y
       )
 
       cols = collide? player_hitbox, @level.fires
@@ -116,8 +116,8 @@ class Game < Scene
     return if !hurtbox
 
     player_hurtbox = hurtbox.merge(
-      x: hurtbox.x + @level.player.bbox.x,
-      y: hurtbox.y + @level.player.bbox.y
+      x: hurtbox.x + @level.player.sprite.x,
+      y: hurtbox.y + @level.player.sprite.y
     )
 
     reset_level if (collide? player_hurtbox, @level.spikes.map{|s| s.hitbox} + @level.fires).size > 0
@@ -142,7 +142,7 @@ class Game < Scene
   def break_weak_blocks
     return if ![:frozen,:melting].include? @level.player.state
 
-    below = @level.player.bbox.merge(y: @level.player.bbox.y - 1)
+    below = @level.player.sprite.merge(y: @level.player.sprite.y - 1)
     weak_blocks = @level.blocks.find_all do |b|
       b.h == 1
     end
@@ -183,8 +183,8 @@ class Game < Scene
   end
 
   def reset_level
-    point = { x: @level.player.bbox.x + @level.player.bbox.w/2,
-              y: @level.player.bbox.y + @level.player.bbox.h/2 }
+    point = { x: @level.player.sprite.x + @level.player.sprite.w/2,
+              y: @level.player.sprite.y + @level.player.sprite.h/2 }
     @level.particles = create_explosion point
     play_sound args, :portal
     load_level
@@ -208,8 +208,8 @@ class Game < Scene
       @level.particles = particles
       @level.player = IcePlayer.new(args)
       @level.portal = {
-        x: @level.player.bbox.x - 2,
-        y: @level.player.bbox.y - 2,
+        x: @level.player.sprite.x - 2,
+        y: @level.player.sprite.y - 2,
         w: 12, h: 12, time: @time}
       
       if @level.goal

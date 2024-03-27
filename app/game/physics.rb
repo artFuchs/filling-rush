@@ -12,38 +12,26 @@ end
 def move_object obj, borders, holes, colliders
   return obj if obj.state == :using_power
   if obj.state == :frozen || obj.state == :melting
-    apply_inertia obj
+    obj.apply_inertia
   end
-  future = move_restricting_to_borders obj, borders, holes
-  future = move_checking_collisions obj, future, colliders
-  if future.state != :ground
-    future = fix_clipping future, colliders
-  end
-  return future
-end
 
-def apply_inertia obj
-  return if !obj.vel_h
-  if obj.vel_h.abs < 0.05
-    obj.vel_h = 0
-  else  
-    obj.vel_h =  obj.vel_h * 0.97
-  end
+  obj.apply_movement borders, holes
+  move_checking_collisions(obj, future, colliders)
+  # if future.state != :ground
+  #   future = fix_clipping(future, colliders)
+  # end
+  return obj
 end
 
 def move_restricting_to_borders obj, borders, holes
-  vel_h = 0
-  vel_h = obj.vel_h if obj.vel_h
-  vel_v = 0
-  vel_v = obj.vel_v if obj.vel_v
-  dx = obj.x + vel_h
-  dy = obj.y + vel_v
+  dx = obj.sprite.x + obj.velocity.h
+  dy = obj.sprite.y + obj.velocity.v
 
-  
-  below = obj.merge(y: obj.y-1)
+  below = obj.sprite.merge(y: obj.sprite.y-1)
   is_falling = (inside? below, holes).size > 0 || below.y < $level_box.y
   if is_falling
-    return obj.merge(x: dx, y: dy, vel_h: vel_h, vel_v: vel_v)
+    obj.sprite.merge(x: dx, y: dy)
+    return
   end
 
   min_x = borders.x+1
@@ -52,18 +40,18 @@ def move_restricting_to_borders obj, borders, holes
 
   if dx < min_x
     dx = min_x
-    vel_h = 0
-  elsif dx+obj.w > max_x
-    dx = max_x-obj.w
-    vel_h = 0
+    obj.velocity.h = 0
+  elsif dx+obj.sprite.w > max_x
+    dx = max_x-obj.sprite.w
+    obj.velocity.h = 0
   end
 
   if dy < min_y
     dy = min_y
-    vel_v = 0
+    obj.velocity.v = 0
   end
 
-  return obj.merge(x: dx, y: dy, vel_h: vel_h, vel_v: vel_v)
+  obj.sprite.merge(x: dx, y: dy)
 end
 
 def move_checking_collisions obj, future, colliders
@@ -147,7 +135,7 @@ def collide? obj, colliders
   colliders.find_all do |c|
     if c
       if (c.has_key? :x) && (c.has_key? :y) && (c.has_key? :w) && (c.has_key? :h)
-        obj.intersect_rect? c
+        obj.sprite.intersect_rect? c
       end
     end
   end
@@ -157,8 +145,7 @@ def inside? obj, areas
   return if !obj
   areas.find_all do |c|
     if c && (c.has_key? :x) && (c.has_key? :y) && (c.has_key? :w) && (c.has_key? :h)
-      (obj.intersect_rect? c) && (obj.x >= c.x) && (obj.x+obj.w <= c.x+c.w)
-
+      (obj.sprite.intersect_rect? c) && (obj.sprite.x >= c.x) && (obj.sprite.x+obj.sprite.w <= c.x+c.w)
     end
   end
 end
