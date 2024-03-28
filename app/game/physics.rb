@@ -10,6 +10,12 @@ def apply_gravity obj
 end
 
 def move_object obj, borders, holes, colliders
+  # Initialize object's future state
+  obj.sprite.dx = obj.sprite.x
+  obj.sprite.dy = obj.sprite.y
+  obj.velocity.dh = obj.velocity.h
+  obj.velocity.dv = obj.velocity.v
+
   return if obj.state == :using_power
   if obj.state == :frozen || obj.state == :melting
     obj.apply_inertia
