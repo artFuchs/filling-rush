@@ -8,7 +8,7 @@ class Player
   attr_accessor :future_sprite, :future_velocity
   
   def initialize args
-    @sprite = {x: 0, y: 0, w: 8, h: 8, dx: 0, dy: 0, path: get_sprite_path(:standing)}
+    @sprite = {x: 0, y: 0, w: 8, h: 8, dx: 0, dy: 0, path: get_sprite_path(:standing), flip_horizontally: false}
     @velocity = {v: 0, h: 0, dv: 0, dh: 0}
     @state = :ground
     @can_double_jump = false
@@ -80,8 +80,8 @@ class Player
     
     @velocity.h = args.nokia.keyboard.left_right*0.5
     @walking = (@velocity.h != 0)
-    @flip_horizontally = false if @velocity.h > 0
-    @flip_horizontally = true if @velocity.h < 0
+    @sprite.flip_horizontally = false if @velocity.h > 0
+    @sprite.flip_horizontally = true if @velocity.h < 0
     
     if (args.nokia.keyboard.key_down.up || args.nokia.keyboard.key_down.w)
       apply_jump args
@@ -353,7 +353,7 @@ class IcePlayer < Player
         @hitbox = get_hitbox(:melting)
     end
 
-    if @flip_horizontally
+    if @sprite.flip_horizontally
       @hurtbox.x = @sprite.w - @hurtbox.x - @hurtbox.w
       @hitbox.x = @sprite.w - @hitbox.x - @hitbox.w
     end
