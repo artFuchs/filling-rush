@@ -206,7 +206,9 @@ class Game < Scene
       }
       @level.holes ||= []
       @level.particles = particles
-      @level.player = IcePlayer.new(args)
+      player = IcePlayer.new(args)
+      player.merge(@level.player)
+      @level.player = player
       @level.portal = {
         x: @level.player.sprite.x - 2,
         y: @level.player.sprite.y - 2,

@@ -8,7 +8,7 @@ class Player
   attr_accessor :future_sprite, :future_velocity
   
   def initialize args
-    @sprite = {x: 10, y: 10, w: 8, h: 8, dx: 0, dy: 0, path: get_sprite_path(:standing)}
+    @sprite = {x: 0, y: 0, w: 8, h: 8, dx: 0, dy: 0, path: get_sprite_path(:standing)}
     @velocity = {v: 0, h: 0, dv: 0, dh: 0}
     @state = :ground
     @can_double_jump = false
@@ -16,6 +16,9 @@ class Player
     @hitboxes = parse_hash(args.gtk.parse_json_file('sprites/players/hitboxes.json'))[@type]
   end
 
+  # Parse a JSON to a hash with symbols as keys
+  # Input: {"key1" => "value1", "key2" => {"key3" => "value3"}}
+  # Output: {:key1 => "value1", :key2 => {:key3 => "value3"}}
   def parse_hash hash
     new_hash = {}
     hash.each do |key, value|
@@ -29,6 +32,12 @@ class Player
       end
     end
     return new_hash
+  end
+
+  # Merge initial player sprite position
+  def merge sprite
+    @sprite.x = sprite.x
+    @sprite.y = sprite.y
   end
 
   def update_state args, level
@@ -75,7 +84,7 @@ class Player
     @flip_horizontally = true if @velocity.h < 0
     
     if (args.nokia.keyboard.key_down.up || args.nokia.keyboard.key_down.w)
-      apply_jump(args)
+      apply_jump args
     end
   
     @velocity[:v] ||= 0
@@ -222,13 +231,6 @@ class Player
     end
   end
 
-  def apply_changes
-    @sprite[:x] = @sprite[:dx]
-    @sprite[:y] = @sprite[:dy]
-    @velocity[:h] = @velocity[:dh]
-    @velocity[:v] = @velocity[:dv]
-  end
-
   def fix_clipping colliders
     future = @sprite.merge(x: @sprite[:dx], y: @sprite[:dy])
     cols = collide?(future, colliders)
@@ -245,6 +247,18 @@ class Player
     end
   end
 
+  def has_fallen?
+    return @sprite.y+@sprite.h+1 < 0
+  end
+
+  # After all calculations, apply changes to the sprite
+  def apply_changes
+    @sprite[:x] = @sprite[:dx]
+    @sprite[:y] = @sprite[:dy]
+    @velocity[:h] = @velocity[:dh]
+    @velocity[:v] = @velocity[:dv]
+  end
+
   def get_sprite_path(action, frame = 0)
     return "sprites/players/#{@type.to_s}/#{action}#{frame}.png"
   end
@@ -255,10 +269,6 @@ class Player
 
   def get_hitbox(action, frame = 0)
     return @hitboxes[action][frame]
-  end
-
-  def has_fallen?
-    return @sprite.y+@sprite.h+1 < 0
   end
 
   def debug args
